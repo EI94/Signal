@@ -11,31 +11,27 @@ import { mapLatestToSignalSummaryV1 } from './signal-summary-mapper';
 const RISK_TYPES = new Set(['ma_divestment']);
 const POSITIVE_TYPES = new Set(['project_award', 'partnership_mou', 'technology_milestone']);
 
-const HIGH_SCORE_THRESHOLD = 60;
-const MEDIUM_SCORE_THRESHOLD = 30;
-
 function classifyCountryStatus(signals: SignalSummaryV1[]): 'red' | 'yellow' | 'green' | 'neutral' {
   if (signals.length === 0) return 'neutral';
 
-  let hasRed = false;
-  let hasGreen = false;
+  const maxScore = Math.max(...signals.map((s) => s.compositeScore ?? 0));
+  let riskWeight = 0;
+  let positiveWeight = 0;
 
   for (const s of signals) {
     const score = s.compositeScore ?? 0;
-    if (RISK_TYPES.has(s.signalType) && score >= MEDIUM_SCORE_THRESHOLD) {
-      hasRed = true;
+    if (RISK_TYPES.has(s.signalType)) {
+      riskWeight += score;
     }
-    if (score >= HIGH_SCORE_THRESHOLD && RISK_TYPES.has(s.signalType)) {
-      hasRed = true;
-    }
-    if (POSITIVE_TYPES.has(s.signalType) && score >= MEDIUM_SCORE_THRESHOLD) {
-      hasGreen = true;
+    if (POSITIVE_TYPES.has(s.signalType)) {
+      positiveWeight += score;
     }
   }
 
-  if (hasRed) return 'red';
-  if (hasGreen) return 'green';
-  return 'yellow';
+  if (riskWeight > 0 && (riskWeight >= positiveWeight || maxScore >= 60)) return 'red';
+  if (positiveWeight > 0) return 'green';
+  if (signals.length > 0) return 'yellow';
+  return 'neutral';
 }
 
 export function buildPulseReadModel(params: {

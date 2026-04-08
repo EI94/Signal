@@ -201,8 +201,10 @@ export function IntelligencePage() {
           ) : (
             <WorldMap
               countries={pulseData?.countries ?? []}
+              signals={displaySignals}
               selectedCountry={selectedCountry}
               onCountryClick={handleCountryClick}
+              onSignalClick={handleSignalClick}
             />
           )}
         </div>

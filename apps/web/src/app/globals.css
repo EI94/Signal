@@ -2523,6 +2523,15 @@ code {
   flex-shrink: 0;
 }
 
+@keyframes map-dot-pulse {
+  0% { r: inherit; opacity: 0.4; }
+  50% { opacity: 0.15; }
+  100% { r: inherit; opacity: 0.4; }
+}
+.world-map__dot-pulse {
+  animation: map-dot-pulse 2s ease-in-out infinite;
+}
+
 /* Signal rail */
 .signal-rail {
   width: 380px;

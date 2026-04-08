@@ -1,13 +1,15 @@
 'use client';
 
-import type { CountryStatus } from '@signal/contracts';
+import type { CountryStatus, SignalSummaryV1 } from '@signal/contracts';
 import { useCallback, useMemo, useState } from 'react';
 import { COUNTRY_PATHS } from '../../lib/world-map-paths';
 
 type WorldMapProps = {
   countries: CountryStatus[];
+  signals: SignalSummaryV1[];
   selectedCountry: string | null;
   onCountryClick: (iso2: string) => void;
+  onSignalClick?: (signal: SignalSummaryV1) => void;
 };
 
 const STATUS_FILL: Record<string, string> = {
@@ -24,8 +26,163 @@ const STATUS_FILL_HOVER: Record<string, string> = {
   neutral: 'var(--sg-border, #3d4048)',
 };
 
-export function WorldMap({ countries, selectedCountry, onCountryClick }: WorldMapProps) {
+const SIGNAL_TYPE_DOT: Record<string, { color: string; label: string }> = {
+  ma_divestment: { color: '#dc3545', label: 'M&A' },
+  project_award: { color: '#2ecc71', label: 'Award' },
+  partnership_mou: { color: '#4a9aba', label: 'Partnership' },
+  earnings_reporting_update: { color: '#e6a700', label: 'Earnings' },
+  technology_milestone: { color: '#9b59b6', label: 'Tech' },
+};
+
+const CAPITAL_XY: Record<string, [number, number]> = {
+  AE: [651, 182], QA: [643, 180], SA: [630, 181], KW: [633, 169],
+  OM: [663, 184], BH: [640, 177], IQ: [623, 157], IR: [643, 151],
+  EG: [587, 167], DZ: [509, 148], LY: [537, 159], NG: [521, 225],
+  AO: [537, 274], MZ: [591, 322], ZA: [578, 321], KE: [603, 254],
+  TZ: [610, 269], ET: [608, 225], US: [255, 160], CA: [248, 110],
+  GB: [500, 107], FR: [507, 114], DE: [537, 104], IT: [535, 134],
+  ES: [489, 138], NL: [514, 105], NO: [538, 75], SE: [550, 85],
+  FI: [569, 83], RU: [720, 95], TR: [591, 139], IN: [715, 170],
+  CN: [823, 139], JP: [888, 151], KR: [853, 146], AU: [914, 348],
+  NZ: [985, 365], BR: [367, 293], AR: [338, 346], CL: [304, 342],
+  MX: [225, 196], CO: [294, 237], PE: [286, 283], VE: [314, 221],
+  ID: [797, 267], MY: [782, 241], SG: [788, 246], TH: [779, 212],
+  VN: [794, 192], PH: [836, 210], PK: [703, 157], BD: [751, 184],
+  KZ: [698, 108], UZ: [680, 130], TM: [660, 138], AZ: [614, 135],
+  GE: [606, 131], UA: [574, 114], PL: [545, 110], RO: [558, 122],
+  GR: [549, 137], CZ: [540, 113], HU: [548, 119], AT: [540, 118],
+  CH: [524, 119], BE: [512, 110], PT: [484, 138], IE: [490, 105],
+  DK: [530, 98], IS: [470, 75], CY: [574, 148], IL: [579, 163],
+  JO: [580, 163], LB: [580, 155], SY: [588, 150], YE: [632, 196],
+  SD: [574, 207], SO: [620, 240], MW: [580, 306], GH: [500, 226],
+  SN: [478, 210], CI: [492, 225], CM: [534, 238], CD: [555, 261],
+  ZM: [564, 301], ZW: [573, 312], TN: [530, 148], MA: [490, 156],
+  ML: [497, 207], NE: [522, 207], TD: [547, 213], CF: [549, 237],
+  GA: [530, 250], CG: [541, 255], UG: [575, 251], RW: [573, 256],
+  MG: [619, 312], MM: [767, 195],
+};
+
+function fixDateLinePath(d: string): string {
+  const parts = d.split(/(?=[MLHVCSQTAZ])/i);
+  let lastX = 0;
+  let output = '';
+
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const cmd = trimmed[0];
+    if (cmd === 'Z' || cmd === 'z') {
+      output += 'Z';
+      continue;
+    }
+    const coordStr = trimmed.slice(1).trim();
+    const nums = coordStr.split(/[,\s]+/).map(Number);
+    if ((cmd === 'L' || cmd === 'M') && nums.length >= 2) {
+      const x = nums[0] ?? 0;
+      if (cmd === 'L' && Math.abs(x - lastX) > 400) {
+        output += `Z M${coordStr}`;
+      } else {
+        output += trimmed;
+      }
+      lastX = x;
+    } else {
+      output += trimmed;
+    }
+  }
+  return output;
+}
+
+type SignalDot = {
+  iso2: string;
+  x: number;
+  y: number;
+  count: number;
+  dominantType: string;
+  topTitle: string;
+  topScore: number;
+};
+
+function computePathCenter(d: string): [number, number] {
+  let sumX = 0;
+  let sumY = 0;
+  let n = 0;
+  const re = /([ML])\s*([\d.]+)[,\s]([\d.]+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(d)) !== null) {
+    const x = Number.parseFloat(m[2] ?? '0');
+    const y = Number.parseFloat(m[3] ?? '0');
+    if (x > 960 || x < 40) continue;
+    sumX += x;
+    sumY += y;
+    n++;
+  }
+  if (n === 0) return [500, 250];
+  return [sumX / n, sumY / n];
+}
+
+function getCountryCenter(iso2: string): [number, number] {
+  const manual = CAPITAL_XY[iso2];
+  if (manual) return manual;
+  const entry = COUNTRY_PATHS.find((c) => c.iso2 === iso2);
+  if (entry) return computePathCenter(entry.d);
+  return [500, 250];
+}
+
+function buildSignalDots(signals: SignalSummaryV1[]): SignalDot[] {
+  const byCountry = new Map<string, SignalSummaryV1[]>();
+  for (const s of signals) {
+    const code = s.primaryCountryCode;
+    if (!code) continue;
+    const list = byCountry.get(code) ?? [];
+    list.push(s);
+    byCountry.set(code, list);
+  }
+
+  const dots: SignalDot[] = [];
+  for (const [iso2, sigs] of byCountry) {
+    const typeCounts = new Map<string, number>();
+    for (const s of sigs) {
+      typeCounts.set(s.signalType, (typeCounts.get(s.signalType) ?? 0) + 1);
+    }
+    let dominantType: string = sigs[0]?.signalType ?? 'ma_divestment';
+    let maxCount = 0;
+    for (const [t, c] of typeCounts) {
+      if (c > maxCount) {
+        maxCount = c;
+        dominantType = t;
+      }
+    }
+    const sorted = [...sigs].sort((a, b) => (b.compositeScore ?? 0) - (a.compositeScore ?? 0));
+    const [cx, cy] = getCountryCenter(iso2);
+    dots.push({
+      iso2,
+      x: cx,
+      y: cy,
+      count: sigs.length,
+      dominantType,
+      topTitle: sorted[0]?.title ?? '',
+      topScore: sorted[0]?.compositeScore ?? 0,
+    });
+  }
+  return dots;
+}
+
+function dotRadius(count: number): number {
+  if (count >= 10) return 6;
+  if (count >= 5) return 4.5;
+  if (count >= 2) return 3.5;
+  return 2.5;
+}
+
+export function WorldMap({
+  countries,
+  signals,
+  selectedCountry,
+  onCountryClick,
+  onSignalClick,
+}: WorldMapProps) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [hoveredDot, setHoveredDot] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const statusMap = useMemo(() => {
@@ -33,6 +190,8 @@ export function WorldMap({ countries, selectedCountry, onCountryClick }: WorldMa
     for (const c of countries) m.set(c.iso2, c);
     return m;
   }, [countries]);
+
+  const signalDots = useMemo(() => buildSignalDots(signals), [signals]);
 
   const getFill = useCallback(
     (iso2: string, isHovered: boolean) => {
@@ -45,12 +204,22 @@ export function WorldMap({ countries, selectedCountry, onCountryClick }: WorldMa
     [statusMap],
   );
 
-  const hoveredData = hovered ? statusMap.get(hovered) : null;
+  const hoveredCountryData = hovered ? statusMap.get(hovered) : null;
+  const hoveredDotData = hoveredDot ? signalDots.find((d) => d.iso2 === hoveredDot) : null;
 
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }, []);
+
+  const handleDotClick = useCallback(
+    (iso2: string) => {
+      if (!onSignalClick) return;
+      const sig = signals.find((s) => s.primaryCountryCode === iso2);
+      if (sig) onSignalClick(sig);
+    },
+    [signals, onSignalClick],
+  );
 
   return (
     <div className="world-map">
@@ -60,15 +229,27 @@ export function WorldMap({ countries, selectedCountry, onCountryClick }: WorldMa
         aria-label="World intelligence map"
         onMouseMove={handleMouseMove}
       >
+        <defs>
+          <filter id="dot-glow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
         <rect x="0" y="0" width="1000" height="500" fill="var(--sg-bg, #1a1d23)" rx="4" />
+
         {COUNTRY_PATHS.map(({ iso2, d, name }) => {
           const isSelected = selectedCountry === iso2;
           const isHovered = hovered === iso2;
+          const pathD = fixDateLinePath(d);
           return (
             // biome-ignore lint/a11y/noStaticElementInteractions: SVG path needs click/hover for map
             <path
               key={iso2}
-              d={d}
+              d={pathD}
               fill={getFill(iso2, isHovered || isSelected)}
               stroke={isSelected ? '#60a5fa' : 'rgba(255,255,255,0.08)'}
               strokeWidth={isSelected ? 1.2 : 0.3}
@@ -86,35 +267,117 @@ export function WorldMap({ countries, selectedCountry, onCountryClick }: WorldMa
             />
           );
         })}
+
+        {signalDots.map((dot) => {
+          const r = dotRadius(dot.count);
+          const color = SIGNAL_TYPE_DOT[dot.dominantType]?.color ?? '#4a9aba';
+          const isHighScore = dot.topScore >= 60;
+          return (
+            <g key={`dot-${dot.iso2}`}>
+              {isHighScore && (
+                <circle
+                  cx={dot.x}
+                  cy={dot.y}
+                  r={r + 3}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={0.5}
+                  opacity={0.4}
+                  className="world-map__dot-pulse"
+                />
+              )}
+              <circle
+                cx={dot.x}
+                cy={dot.y}
+                r={r}
+                fill={color}
+                stroke="rgba(0,0,0,0.5)"
+                strokeWidth={0.5}
+                opacity={0.9}
+                filter="url(#dot-glow)"
+                style={{ cursor: 'pointer', transition: 'r 0.2s' }}
+                onMouseEnter={() => setHoveredDot(dot.iso2)}
+                onMouseLeave={() => setHoveredDot(null)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDotClick(dot.iso2);
+                }}
+              />
+              {dot.count > 1 && (
+                <text
+                  x={dot.x}
+                  y={dot.y + 0.8}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="white"
+                  fontSize={r > 4 ? 5 : 4}
+                  fontWeight="700"
+                  style={{ pointerEvents: 'none', userSelect: 'none' }}
+                >
+                  {dot.count}
+                </text>
+              )}
+            </g>
+          );
+        })}
       </svg>
 
-      {hovered && (
+      {(hovered || hoveredDot) && (
         <div
           className="world-map__tooltip"
           style={{ left: tooltipPos.x + 12, top: tooltipPos.y - 10 }}
         >
-          <div className="world-map__tooltip-header">
-            <strong>{COUNTRY_PATHS.find((c) => c.iso2 === hovered)?.name ?? hovered}</strong>
-            {hoveredData && (
-              <span
-                className={`world-map__tooltip-status world-map__tooltip-status--${hoveredData.status}`}
-              >
-                {hoveredData.status}
-              </span>
-            )}
-          </div>
-          {hoveredData ? (
+          {hoveredDot && hoveredDotData ? (
             <>
+              <div className="world-map__tooltip-header">
+                <strong>
+                  {COUNTRY_PATHS.find((c) => c.iso2 === hoveredDot)?.name ?? hoveredDot}
+                </strong>
+                <span
+                  className="world-map__tooltip-status"
+                  style={{
+                    background: `${SIGNAL_TYPE_DOT[hoveredDotData.dominantType]?.color ?? '#4a9aba'}33`,
+                    color: SIGNAL_TYPE_DOT[hoveredDotData.dominantType]?.color ?? '#4a9aba',
+                  }}
+                >
+                  {SIGNAL_TYPE_DOT[hoveredDotData.dominantType]?.label ?? hoveredDotData.dominantType}
+                </span>
+              </div>
               <span className="world-map__tooltip-count">
-                {hoveredData.signalCount} signal{hoveredData.signalCount !== 1 ? 's' : ''}
+                {hoveredDotData.count} signal{hoveredDotData.count !== 1 ? 's' : ''} &middot;
+                Score {hoveredDotData.topScore}
               </span>
-              {hoveredData.topSignalTitle && (
-                <span className="world-map__tooltip-signal">{hoveredData.topSignalTitle}</span>
+              <span className="world-map__tooltip-signal">{hoveredDotData.topTitle}</span>
+            </>
+          ) : hovered ? (
+            <>
+              <div className="world-map__tooltip-header">
+                <strong>{COUNTRY_PATHS.find((c) => c.iso2 === hovered)?.name ?? hovered}</strong>
+                {hoveredCountryData && (
+                  <span
+                    className={`world-map__tooltip-status world-map__tooltip-status--${hoveredCountryData.status}`}
+                  >
+                    {hoveredCountryData.status}
+                  </span>
+                )}
+              </div>
+              {hoveredCountryData ? (
+                <>
+                  <span className="world-map__tooltip-count">
+                    {hoveredCountryData.signalCount} signal
+                    {hoveredCountryData.signalCount !== 1 ? 's' : ''}
+                  </span>
+                  {hoveredCountryData.topSignalTitle && (
+                    <span className="world-map__tooltip-signal">
+                      {hoveredCountryData.topSignalTitle}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="world-map__tooltip-count">No activity</span>
               )}
             </>
-          ) : (
-            <span className="world-map__tooltip-count">No activity</span>
-          )}
+          ) : null}
         </div>
       )}
 
