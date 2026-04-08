@@ -1,0 +1,18 @@
+{
+  "schema_version": "gcs-archive-manifest-v1",
+  "source_id": "src_example_001",
+  "source_content_id": "a1b2c3d4e5f6789012345678abcdef01",
+  "observed_date": "2026-04-04",
+  "artifacts": [
+    {
+      "kind": "raw",
+      "relative_key": "raw/source/src_example_001/date=2026-04-04/a1b2c3d4e5f6789012345678abcdef01.html",
+      "content_type": "text/html"
+    },
+    {
+      "kind": "normalized",
+      "relative_key": "normalized/source/src_example_001/date=2026-04-04/a1b2c3d4e5f6789012345678abcdef01.txt",
+      "content_type": "text/plain"
+    }
+  ]
+}

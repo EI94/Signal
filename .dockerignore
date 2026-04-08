@@ -1,0 +1,14 @@
+node_modules
+.git
+**/.turbo
+**/dist
+.turbo
+apps/web
+packages/ui
+packages/tooling
+packages/maire-seed-import
+packages/workspace-staging-bootstrap
+packages/firebase-auth-uid-lookup
+docs
+.github
+.cursor

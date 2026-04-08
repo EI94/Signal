@@ -1,0 +1,15 @@
+[
+  { "name": "signal_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "workspace_id", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "signal_type", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "entity_refs_json", "type": "JSON", "mode": "NULLABLE" },
+  { "name": "title", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "short_summary", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "status", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "novelty", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "occurred_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "detected_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "latest_composite_score", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "created_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "updated_at", "type": "TIMESTAMP", "mode": "REQUIRED" }
+]

@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+# Do not commit terraform.tfvars.
+
+project_id = "YOUR_GCP_PROJECT_ID"
+
+# Optional overrides:
+# region                  = "europe-west1"
+# bigquery_location       = "EU"
+# firestore_location_id   = "europe-west1"
+# manage_firestore_database = true
+# raw_bucket_force_destroy  = true
+# bq_delete_contents_on_destroy = true

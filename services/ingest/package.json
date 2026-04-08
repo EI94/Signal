@@ -1,0 +1,27 @@
+{
+  "name": "@signal/ingest",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node --env-file=.env ./node_modules/tsx/dist/cli.mjs watch src/server.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^8.1.1",
+    "@google-cloud/pubsub": "^4.11.0",
+    "@google-cloud/storage": "^7.19.0",
+    "@signal/config": "workspace:*",
+    "@signal/contracts": "workspace:*",
+    "fastify": "^5.8.4",
+    "firebase-admin": "^13.7.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "tsx": "^4.21.0",
+    "vitest": "^4.1.2"
+  }
+}

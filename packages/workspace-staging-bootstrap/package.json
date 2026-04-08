@@ -1,0 +1,23 @@
+{
+  "name": "@signal/workspace-staging-bootstrap",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bootstrap": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@signal/contracts": "workspace:*",
+    "firebase-admin": "^13.7.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@signal/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./firestore-operational": {
+      "types": "./src/firestore-operational.ts",
+      "default": "./src/firestore-operational.ts"
+    },
+    "./source-registry": {
+      "types": "./src/source-registry.ts",
+      "default": "./src/source-registry.ts"
+    },
+    "./geography-iso": {
+      "types": "./src/geography-iso.ts",
+      "default": "./src/geography-iso.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "vitest": "^4.1.2"
+  }
+}

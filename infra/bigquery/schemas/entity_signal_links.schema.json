@@ -1,0 +1,12 @@
+[
+  { "name": "entity_type", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "entity_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "signal_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "signal_type", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "occurred_at", "type": "TIMESTAMP", "mode": "NULLABLE" },
+  { "name": "detected_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "composite_score", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "status", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "novelty", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "workspace_id", "type": "STRING", "mode": "NULLABLE" }
+]

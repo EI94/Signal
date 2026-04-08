@@ -1,0 +1,12 @@
+[
+  { "name": "signal_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "scored_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "relevance", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "impact", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "freshness", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "confidence", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "source_authority", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "composite_score", "type": "INTEGER", "mode": "REQUIRED" },
+  { "name": "scoring_version", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "workspace_id", "type": "STRING", "mode": "NULLABLE" }
+]

@@ -1,0 +1,12 @@
+[
+  { "name": "brief_run_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "workspace_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "brief_type", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "period_start", "type": "DATE", "mode": "REQUIRED" },
+  { "name": "period_end", "type": "DATE", "mode": "REQUIRED" },
+  { "name": "status", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "source_signal_ids", "type": "STRING", "mode": "REPEATED" },
+  { "name": "generated_at", "type": "TIMESTAMP", "mode": "NULLABLE" },
+  { "name": "model_assisted", "type": "BOOLEAN", "mode": "NULLABLE" },
+  { "name": "created_at", "type": "TIMESTAMP", "mode": "REQUIRED" }
+]

@@ -1,0 +1,17 @@
+NODE_ENV: staging
+FIREBASE_PROJECT_ID: signal-ac219
+FIRESTORE_DATABASE_ID: default
+SIGNAL_BIGQUERY_DATASET: signal_staging_analytics
+SIGNAL_GCS_RAW_BUCKET: signal-ac219-signal-staging-raw
+SIGNAL_DEFAULT_WORKSPACE_ID: ws_maire_staging
+SIGNAL_TOOL_INGEST_BASE_URL: https://signal-ingest-uhtaebdkna-og.a.run.app
+# Perplexity Agent API (`/v1/agent`) — `summarize_delta` + optional brief enrichment; key via Secret Manager on Cloud Run
+SIGNAL_PERPLEXITY_ENABLED: "true"
+SIGNAL_PERPLEXITY_MODEL: "sonar"
+SIGNAL_RESEND_ENABLED: "false"
+SIGNAL_INTEL_EVENT_EXTRACTION_ENABLED: "false"
+SIGNAL_INTEL_SIGNAL_PROMOTION_ENABLED: "false"
+SIGNAL_ALERT_EVALUATION_ENABLED: "false"
+SIGNAL_BRIEF_GENERATION_ENABLED: "false"
+SIGNAL_BRIEF_ENRICHMENT_ENABLED: "false"
+SIGNAL_USAGE_METERING_ENABLED: "false"

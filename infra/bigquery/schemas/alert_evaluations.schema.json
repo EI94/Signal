@@ -1,0 +1,11 @@
+[
+  { "name": "evaluation_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "workspace_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "alert_rule_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "signal_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "outcome", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "reason_code", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "evaluated_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "cooldown_applied", "type": "BOOLEAN", "mode": "NULLABLE" },
+  { "name": "created_at", "type": "TIMESTAMP", "mode": "REQUIRED" }
+]

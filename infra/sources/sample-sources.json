@@ -1,0 +1,60 @@
+[
+  {
+    "sourceId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "name": "Example competitor — newsroom",
+    "canonicalUrl": "https://example.com/newsroom/press",
+    "sourceType": "web_page",
+    "category": "competitor",
+    "isActive": true,
+    "authorityScore": 72,
+    "priorityTier": "p2_standard",
+    "lastReviewedAt": "2026-04-01T00:00:00.000Z",
+    "fetchStrategy": {
+      "fetchMethodHint": "html",
+      "checkFrequencyBucket": "daily",
+      "timeoutRetryClass": "standard",
+      "etagSupport": "unknown",
+      "authRequired": false
+    },
+    "parserStrategy": {
+      "parserStrategyKey": "html_generic",
+      "contentLanguageHint": "en",
+      "expectedContentKind": "web_html"
+    },
+    "linkedEntityRefs": [
+      {
+        "entityType": "organization",
+        "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "displayName": "Example Org"
+      }
+    ],
+    "createdAt": "2026-01-15T10:00:00.000Z",
+    "updatedAt": "2026-04-01T00:00:00.000Z",
+    "createdBy": "seed-admin-uid",
+    "notes": "Reference-only sample for WS4.1."
+  },
+  {
+    "sourceId": "8c9e4470-8f4a-4a3f-9c2d-1b2a3c4d5e6f",
+    "name": "Example regulatory RSS",
+    "canonicalUrl": "https://example.gov/regulatory/feed.xml",
+    "sourceType": "regulatory_feed",
+    "category": "policy_regulatory",
+    "isActive": true,
+    "authorityScore": 90,
+    "priorityTier": "p1_high",
+    "fetchStrategy": {
+      "fetchMethodHint": "rss",
+      "checkFrequencyBucket": "hourly",
+      "etagSupport": "expected",
+      "authRequired": false
+    },
+    "parserStrategy": {
+      "parserStrategyKey": "regulatory_filing_generic",
+      "contentLanguageHint": "it",
+      "expectedContentKind": "rss_xml"
+    },
+    "linkedEntityRefs": [],
+    "createdAt": "2026-02-01T09:00:00.000Z",
+    "updatedAt": "2026-04-01T00:00:00.000Z"
+  }
+]

@@ -1,0 +1,45 @@
+canonicalUrl,sourceType,category,linkedEntityRefs,priorityTier,checkFrequencyBucket,authorityScore,notes
+https://www.groupmaire.com/en/,web_page,group_corporate,MAIRE,p0_critical,weekly,100,"Primary corporate entry point; use for company scope, business-unit framing and corporate announcements."
+https://www.groupmaire.com/en/about-us/,web_page,group_corporate,MAIRE,p0_critical,monthly,100,Official corporate profile / leadership summary.
+https://www.groupmaire.com/en/governance/governance-model/board-of-directors/,web_page,group_governance,MAIRE,p0_critical,monthly,100,Official board and governance changes.
+https://www.groupmaire.com/en/investors/financial-results/2024/,web_page,group_investor_relations,MAIRE,p0_critical,weekly,100,Financial results landing page; anchor for annual/interim materials.
+https://www.groupmaire.com/media/filer_public/20/c4/20c48d20-e2c9-4a9c-8f27-ce79ce50921b/202503_-_maire_company_profile_-_fy_2024_results.pdf,pdf_endpoint,group_investor_relations,MAIRE;Middle East;Africa;Caspian Area,p0_critical,monthly,100,"Best compact official source for 2025-2034 strategy, pipeline, backlog geographies and key projects."
+https://www.groupmaire.com/media/filer_public/78/39/7839df4c-40b1-4362-be0c-2b114971a967/maire_2024_annual_financial_report_16042025.pdf,pdf_endpoint,group_investor_relations,MAIRE,p0_critical,monthly,100,Authoritative annual report / sustainability statement.
+https://www.groupmaire.com/en/solutions/,web_page,group_solutions,MAIRE;Nitrogen;Hydrogen & Circular Carbon;Fuels & Chemicals;Polymers,p0_critical,monthly,100,Official solutions taxonomy and portfolio framing.
+https://www.groupmaire.com/en/about-us/sustainable-technology-solutions/,web_page,group_solutions,NextChem;Stamicarbon;KT Kinetics Technology;Nitrogen;Hydrogen & Circular Carbon;Polymers,p0_critical,monthly,100,Official STS business-unit overview and company list.
+https://www.groupmaire.com/en/about-us/ec-solutions/,web_page,group_solutions,Tecnimont;Integrated E&C Solutions,p0_critical,monthly,100,Official Integrated E&C business-unit overview.
+https://www.groupmaire.com/en/newsroom/press-releases/,web_page,group_newsroom,MAIRE,p0_critical,daily,100,"Primary official press release feed for awards, contracts and strategic actions."
+https://www.nextchem.com/en/newsroom/,web_page,subsidiary_newsroom,NextChem;Stamicarbon;KT Kinetics Technology,p0_critical,daily,100,Primary technology/business-unit newsroom.
+https://www.nextchem.com/en/solutions/technologies/,web_page,technology_portfolio,NextChem;NX Reform;NX eBlue;NX AdWinHydrogen;NX AdWinMethanol;NX Stami Urea;NX Stami Ammonia;NX Stami Nitrates;NX Stami Digital;NX SAF BIO;NX PTU;NX Decarb;NX Circular;NX Replast;NX Re;NX SulphuRec,p0_critical,monthly,100,Canonical product/technology list.
+https://www.stamicarbon.com/news-events/news-updates,web_page,subsidiary_newsroom,Stamicarbon;NX Stami Green Ammonia;Ultra-Low Energy Urea,p1_high,daily,95,Official nitrogen/fertilizer licensor news stream.
+https://www.stamicarbon.com/launch-melt-ultra-low-energy-design,web_page,technology_portfolio,Stamicarbon;Ultra-Low Energy Urea,p1_high,monthly,95,Reference page for ULE urea design.
+https://www.groupmaire.com/en/newsroom/press-releases/detail/maire-awarded-usd-87-billion-contract-by-adnoc-for-the-onshore-portion-of-the-hail-and-ghasha-development-project-in-abu-dhabi-the-largest-award-ever-for-the-group/,web_page,key_reference_project,ADNOC;United Arab Emirates;Tecnimont,p0_critical,weekly,100,Largest MAIRE award; key UAE/ADNOC reference.
+https://www.groupmaire.com/en/newsroom/press-releases/detail/maire-awarded-two-petrochemical-contracts-worth-around-usd-2-billion-in-saudi-arabia/,web_page,key_reference_project,SATORP;Saudi Aramco;TotalEnergies;Saudi Arabia,p0_critical,weekly,100,Amiral / SATORP reference; critical KSA anchor.
+https://www.groupmaire.com/en/newsroom/press-releases/detail/official-kick-off-epc-petrochemical-contract-2023/,web_page,key_reference_project,QatarEnergy;Chevron Phillips Chemical;Qatar,p0_critical,weekly,100,Ras Laffan polymers complex reference.
+https://www.groupmaire.com/en/newsroom/press-releases/detail/nextchem-maire-awarded-about-210-million-contract-for-the-basic-engineering-and-the-supply-of-critical-proprietary-equipment-for-the-pacifico-mexinol-ultra-low-carbon-methanol-project-in-mexico-based-on-its-nx-adwinmethanol-zero-technology/,web_page,key_reference_project,Transition Industries;Mexico;NX AdWinMethanol Zero,p0_critical,weekly,100,Flagship low-carbon methanol project reference.
+https://www.adnoc.ae/en/news-and-media/press-releases,web_page,client_newsroom,ADNOC;United Arab Emirates,p0_critical,daily,95,Official client newsroom.
+https://www.aramco.com/en/news-media/news,web_page,client_newsroom,Saudi Aramco;Saudi Arabia,p0_critical,daily,95,Official client newsroom.
+https://totalenergies.com/media/news,web_page,client_newsroom,TotalEnergies,p1_high,daily,95,Official client newsroom.
+https://www.qatarenergy.qa/en/MediaCentre/Pages/default.aspx,web_page,client_newsroom,QatarEnergy;Qatar,p0_critical,daily,95,Official client media centre.
+https://cpchem.com/en-us/media/news-releases,web_page,client_newsroom,Chevron Phillips Chemical,p1_high,daily,95,Official client newsroom.
+https://www.borouge.com/news-and-media,web_page,client_newsroom,Borouge;United Arab Emirates,p1_high,daily,95,Official strategic-adjacent client newsroom.
+https://www.transitionind.com/,web_page,client_corporate,Transition Industries;Mexico,p1_high,weekly,90,Project developer corporate source for Pacifico Mexinol context.
+https://www.fertiglobe.com/newsroom/,web_page,client_newsroom,Fertiglobe;United Arab Emirates;Egypt,p0_critical,daily,95,Official strategic target newsroom in fertilizers/ammonia.
+https://www.oci-global.com/media/press-releases/,web_page,client_newsroom,OCI Global,p1_high,daily,95,Official strategic target newsroom in fertilizers/methanol.
+https://www.covestro.com/en/news,web_page,client_newsroom,Covestro,p1_high,daily,95,Official client newsroom.
+https://www.orlen.pl/en/about-the-company/media/press-releases,web_page,client_newsroom,ORLEN;ANWIL,p1_high,daily,95,Official ORLEN/ANWIL press release page.
+https://www.kmg.kz/eng/press-center/press-releases/,web_page,client_newsroom,KazMunayGas;Kazakhstan,p0_critical,daily,95,Official KMG newsroom.
+https://www.socar.az/en/press-office/news-and-announcements,web_page,client_newsroom,SOCAR;Azerbaijan,p1_high,daily,95,Official SOCAR newsroom.
+https://sonatrach.com/en/category/news/,web_page,client_newsroom,Sonatrach;Algeria,p1_high,daily,90,Official Sonatrach news feed.
+https://www.eurochemgroup.com/media/,web_page,client_newsroom,EuroChem,p2_low,weekly,90,Historical fertilizer client newsroom.
+https://www.technipenergies.com/media/press-releases,web_page,competitor_newsroom,Technip Energies,p0_critical,daily,95,Top competitor press releases.
+https://www.kbr.com/en/insights-news/press-release,web_page,competitor_newsroom,KBR,p0_critical,daily,95,Top competitor press releases.
+https://www.worley.com/en/news,web_page,competitor_newsroom,Worley,p1_high,daily,95,Competitor news.
+https://www.saipem.com/en/media/press-releases,web_page,competitor_newsroom,Saipem,p1_high,daily,95,Competitor press releases.
+https://www.lummustechnology.com/news,web_page,competitor_newsroom,Lummus Technology,p0_critical,daily,95,Competitor technology/newsroom.
+https://www.topsoe.com/news,web_page,competitor_newsroom,Topsoe,p0_critical,daily,95,Competitor low-carbon molecules newsroom.
+https://www.casale.ch/news/,web_page,competitor_newsroom,Casale,p1_high,daily,90,Competitor fertilizer/ammonia newsroom.
+https://matthey.com/news,web_page,competitor_newsroom,Johnson Matthey,p1_high,daily,95,Competitor catalysts/technology newsroom.
+https://www.airliquide.com/group/press-releases,web_page,competitor_newsroom,Air Liquide Engineering & Construction,p2_low,daily,90,Competitor / adjacent hydrogen/process engineering newsroom.
+https://www.iea.org/topics/hydrogen,web_page,market_regulatory,Hydrogen & Circular Carbon;NX Reform;NX eBlue;NX AdWinHydrogen,p2_low,weekly,90,Official market/regulatory context for hydrogen trends.
+https://www.fertilizer.org/news/,web_page,market_association,Nitrogen;NX Stami Ammonia;NX Stami Urea;Fertiglobe;OCI Global,p2_low,weekly,85,Industry association context for fertilizers.

@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Environment files (committed: .env.example only)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+
+# Test / coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Vercel
+.vercel/
+
+# Terraform (see infra/terraform/.gitignore)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+.vercel

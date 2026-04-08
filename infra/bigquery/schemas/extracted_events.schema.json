@@ -1,0 +1,12 @@
+[
+  { "name": "extracted_event_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "event_family", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "event_time", "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "event_time_precision", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "confidence", "type": "INTEGER", "mode": "NULLABLE" },
+  { "name": "ambiguity_notes", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "evidence_source_content_ids", "type": "STRING", "mode": "REPEATED" },
+  { "name": "extracted_facts_json", "type": "JSON", "mode": "NULLABLE" },
+  { "name": "linked_entity_refs_json", "type": "JSON", "mode": "NULLABLE" },
+  { "name": "created_at", "type": "TIMESTAMP", "mode": "REQUIRED" }
+]

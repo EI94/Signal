@@ -1,0 +1,29 @@
+{
+  "name": "signal",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "turbo test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "maire-seed": "pnpm --filter @signal/maire-seed-import run seed",
+    "maire-seed:staging": "pnpm --filter @signal/maire-seed-import run seed -- --workspace ws_maire_staging --database-id default --apply",
+    "maire-seed:staging:dry": "pnpm --filter @signal/maire-seed-import run seed -- --workspace ws_maire_staging --database-id default",
+    "workspace-bootstrap": "pnpm --filter @signal/workspace-staging-bootstrap run bootstrap",
+    "firebase-auth-uid": "pnpm --filter @signal/firebase-auth-uid-lookup run auth-uid",
+    "clean": "turbo clean"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "dependencies": {
+    "next": "^16.2.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
+    "turbo": "^2.9.3",
+    "typescript": "^6.0.2"
+  }
+}

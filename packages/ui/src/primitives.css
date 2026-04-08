@@ -1,0 +1,398 @@
+/*
+ * Signal — UI Primitives v1
+ *
+ * Token-driven component styles. All values reference --sg-* custom properties.
+ * Class names use `sg-` prefix to match the token namespace.
+ *
+ * Consumers: import this file once in the app root, after tokens.css.
+ */
+
+/* =================================================================== */
+/*  AppShell                                                           */
+/* =================================================================== */
+
+.sg-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--sg-bg);
+}
+
+.sg-shell__header {
+  display: flex;
+  align-items: center;
+  height: 3.25rem;
+  padding: 0 var(--sg-space-5);
+  background: var(--sg-surface);
+  border-bottom: 1px solid var(--sg-border);
+  gap: var(--sg-space-4);
+  flex-shrink: 0;
+}
+
+.sg-shell-brand {
+  font-size: var(--sg-text-sm);
+  font-weight: var(--sg-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sg-text);
+  user-select: none;
+}
+
+.sg-shell-header__end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sg-space-2);
+}
+
+.sg-shell__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sg-shell__sidebar {
+  width: 13rem;
+  flex-shrink: 0;
+  background: var(--sg-surface);
+  border-right: 1px solid var(--sg-border);
+  padding: var(--sg-space-4);
+  overflow-y: auto;
+}
+
+.sg-shell__main {
+  flex: 1;
+  padding: var(--sg-space-6) var(--sg-space-8);
+  overflow-y: auto;
+}
+
+/* =================================================================== */
+/*  Button                                                             */
+/* =================================================================== */
+
+.sg-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sg-space-2);
+  padding: var(--sg-space-2) var(--sg-space-4);
+  font-size: var(--sg-text-sm);
+  font-weight: var(--sg-weight-medium);
+  font-family: inherit;
+  line-height: var(--sg-leading-snug);
+  border-radius: var(--sg-radius-md);
+  border: 1px solid var(--sg-border);
+  background: var(--sg-surface-elevated);
+  color: var(--sg-text);
+  transition:
+    border-color var(--sg-duration-fast) var(--sg-ease-default),
+    background var(--sg-duration-fast) var(--sg-ease-default);
+}
+
+.sg-btn:hover {
+  border-color: var(--sg-border-strong);
+}
+
+.sg-btn:focus-visible {
+  outline: 2px solid var(--sg-focus-ring);
+  outline-offset: 2px;
+}
+
+.sg-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.sg-btn--ghost:hover {
+  background: var(--sg-hover);
+  border-color: transparent;
+}
+
+/* =================================================================== */
+/*  Icon button (theme toggle, shell actions)                          */
+/* =================================================================== */
+
+.sg-icon-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: var(--sg-text-md);
+  line-height: 1;
+  font-family: inherit;
+  background: transparent;
+  color: var(--sg-text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--sg-radius-md);
+  transition: background var(--sg-duration-fast) var(--sg-ease-default);
+}
+
+.sg-icon-btn:hover {
+  background: var(--sg-hover);
+}
+
+.sg-icon-btn:focus-visible {
+  outline: 2px solid var(--sg-focus-ring);
+  outline-offset: 2px;
+}
+
+/* =================================================================== */
+/*  PageHeader                                                         */
+/* =================================================================== */
+
+.sg-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sg-space-4);
+  margin-bottom: var(--sg-space-5);
+}
+
+.sg-page-header__title {
+  font-size: var(--sg-text-xl);
+  font-weight: var(--sg-weight-semibold);
+  letter-spacing: var(--sg-tracking-tight);
+  line-height: var(--sg-leading-tight);
+  color: var(--sg-text);
+}
+
+.sg-page-header__subtitle {
+  font-size: var(--sg-text-sm);
+  color: var(--sg-text-muted);
+  margin-top: var(--sg-space-1);
+}
+
+/* =================================================================== */
+/*  Surface / Card                                                     */
+/* =================================================================== */
+
+.sg-surface {
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-border);
+  border-radius: var(--sg-radius-lg);
+  padding: var(--sg-space-5);
+}
+
+.sg-surface--elevated {
+  background: var(--sg-surface-elevated);
+  box-shadow: var(--sg-shadow-sm);
+}
+
+.sg-surface--subtle {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* =================================================================== */
+/*  Table                                                              */
+/* =================================================================== */
+
+.sg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--sg-text-base);
+}
+
+.sg-table th {
+  text-align: left;
+  padding: var(--sg-space-2) var(--sg-space-3);
+  font-size: var(--sg-text-xs);
+  font-weight: var(--sg-weight-medium);
+  color: var(--sg-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--sg-tracking-wide);
+  border-bottom: 1px solid var(--sg-border-strong);
+}
+
+.sg-table td {
+  padding: var(--sg-space-3);
+  border-bottom: 1px solid var(--sg-border);
+  color: var(--sg-text);
+  vertical-align: middle;
+}
+
+.sg-table tbody tr:hover {
+  background: var(--sg-hover);
+}
+
+.sg-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =================================================================== */
+/*  Badge                                                              */
+/* =================================================================== */
+
+.sg-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sg-space-1) var(--sg-space-2);
+  font-size: var(--sg-text-xs);
+  font-weight: var(--sg-weight-medium);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  border-radius: var(--sg-radius-full);
+  white-space: nowrap;
+}
+
+.sg-badge--neutral {
+  background: var(--sg-surface-elevated);
+  color: var(--sg-text-secondary);
+}
+
+.sg-badge--accent {
+  background: var(--sg-selection);
+  color: var(--sg-accent);
+}
+
+.sg-badge--success {
+  color: var(--sg-success);
+  background: color-mix(in srgb, var(--sg-success) 14%, transparent);
+}
+
+.sg-badge--warning {
+  color: var(--sg-warning);
+  background: color-mix(in srgb, var(--sg-warning) 14%, transparent);
+}
+
+.sg-badge--danger {
+  color: var(--sg-danger);
+  background: color-mix(in srgb, var(--sg-danger) 14%, transparent);
+}
+
+.sg-badge--info {
+  color: var(--sg-info);
+  background: color-mix(in srgb, var(--sg-info) 14%, transparent);
+}
+
+/* =================================================================== */
+/*  Drawer                                                             */
+/* =================================================================== */
+
+.sg-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.sg-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 201;
+  width: 24rem;
+  max-width: 90vw;
+  background: var(--sg-surface);
+  box-shadow: var(--sg-shadow-lg);
+  overflow-y: auto;
+  padding: var(--sg-space-6);
+}
+
+.sg-drawer--right {
+  right: 0;
+  border-left: 1px solid var(--sg-border);
+}
+
+.sg-drawer--left {
+  left: 0;
+  border-right: 1px solid var(--sg-border);
+}
+
+/* =================================================================== */
+/*  EmptyState                                                         */
+/* =================================================================== */
+
+.sg-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sg-space-16) var(--sg-space-6);
+  gap: var(--sg-space-2);
+}
+
+.sg-empty-state__title {
+  font-size: var(--sg-text-base);
+  font-weight: var(--sg-weight-medium);
+  color: var(--sg-text-secondary);
+}
+
+.sg-empty-state__description {
+  font-size: var(--sg-text-sm);
+  color: var(--sg-text-muted);
+  max-width: 28rem;
+  line-height: var(--sg-leading-relaxed);
+}
+
+/* =================================================================== */
+/*  Skeleton                                                           */
+/* =================================================================== */
+
+.sg-skeleton {
+  background: var(--sg-border);
+  border-radius: var(--sg-radius-sm);
+  animation: sg-pulse 1.8s ease-in-out infinite;
+}
+
+.sg-skeleton--text {
+  height: 0.875em;
+  width: 100%;
+}
+
+.sg-skeleton--block {
+  height: 4rem;
+  width: 100%;
+}
+
+@keyframes sg-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* =================================================================== */
+/*  CommandBarShell                                                     */
+/* =================================================================== */
+
+.sg-cmd-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sg-space-2);
+  padding: var(--sg-space-2) var(--sg-space-3);
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-border);
+  border-radius: var(--sg-radius-lg);
+}
+
+.sg-cmd-bar__input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sg-space-1) var(--sg-space-2);
+  font-family: inherit;
+  font-size: var(--sg-text-base);
+  background: transparent;
+  color: var(--sg-text);
+  border: none;
+  outline: none;
+}
+
+.sg-cmd-bar__input::placeholder {
+  color: var(--sg-text-muted);
+}
+
+.sg-cmd-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sg-space-1);
+  flex-shrink: 0;
+}

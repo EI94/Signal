@@ -1,0 +1,91 @@
+watchlistName,entityType,entityIdOrCanonicalName,priority
+Board Core Accounts,organization,ADNOC,P0
+Board Core Accounts,organization,Saudi Aramco,P0
+Board Core Accounts,organization,SATORP,P0
+Board Core Accounts,organization,QatarEnergy,P0
+Board Core Accounts,organization,Chevron Phillips Chemical,P0
+Board Core Accounts,organization,Transition Industries,P0
+Board Core Accounts,organization,KazMunayGas,P0
+Board Core Accounts,organization,KMGPetrochem,P0
+Board Core Accounts,organization,Fertiglobe,P0
+Board Core Accounts,organization,TotalEnergies,P1
+Board Core Accounts,organization,Covestro,P1
+Board Core Accounts,organization,Sonatrach,P1
+Competitor Radar,organization,Technip Energies,P0
+Competitor Radar,organization,KBR,P0
+Competitor Radar,organization,Lummus Technology,P0
+Competitor Radar,organization,Topsoe,P0
+Competitor Radar,organization,thyssenkrupp Uhde,P0
+Competitor Radar,organization,Casale,P0
+Competitor Radar,organization,Johnson Matthey,P0
+Competitor Radar,organization,Saipem,P1
+Competitor Radar,organization,Worley,P1
+Competitor Radar,organization,Samsung E&A,P1
+Middle East Execution,geography,Middle East,P0
+Middle East Execution,geography,United Arab Emirates,P0
+Middle East Execution,geography,Saudi Arabia,P0
+Middle East Execution,geography,Qatar,P0
+Middle East Execution,organization,ADNOC,P0
+Middle East Execution,organization,Saudi Aramco,P0
+Middle East Execution,organization,SATORP,P0
+Middle East Execution,organization,QatarEnergy,P0
+Middle East Execution,organization,Fertiglobe,P1
+Middle East Execution,technology,NX Decarb,P1
+Middle East Execution,technology,NX SulphuRec,P1
+Fertilizers & Nitrogen,technology,NX Stami Ammonia,P0
+Fertilizers & Nitrogen,technology,NX Stami Green Ammonia,P0
+Fertilizers & Nitrogen,technology,NX Stami Urea,P0
+Fertilizers & Nitrogen,technology,Ultra-Low Energy Urea,P0
+Fertilizers & Nitrogen,organization,Fertiglobe,P0
+Fertilizers & Nitrogen,organization,OCI Global,P1
+Fertilizers & Nitrogen,organization,EuroChem,P1
+Fertilizers & Nitrogen,organization,KuibyshevAzot,P2
+Fertilizers & Nitrogen,organization,ANWIL,P2
+Fertilizers & Nitrogen,organization,Shandong Lianmeng Chemical,P2
+Hydrogen & Low-Carbon Molecules,technology,NX Reform,P0
+Hydrogen & Low-Carbon Molecules,technology,NX eBlue,P0
+Hydrogen & Low-Carbon Molecules,technology,NX AdWinHydrogen,P0
+Hydrogen & Low-Carbon Molecules,technology,NX AdWinMethanol Zero,P0
+Hydrogen & Low-Carbon Molecules,technology,NX Decarb,P0
+Hydrogen & Low-Carbon Molecules,organization,Transition Industries,P0
+Hydrogen & Low-Carbon Molecules,organization,ADNOC,P0
+Hydrogen & Low-Carbon Molecules,organization,FertigHy,P1
+Hydrogen & Low-Carbon Molecules,organization,Topsoe,P1
+Hydrogen & Low-Carbon Molecules,organization,thyssenkrupp Uhde,P1
+Circularity & Sustainable Fuels,technology,NX Circular,P0
+Circularity & Sustainable Fuels,technology,NX Replast,P0
+Circularity & Sustainable Fuels,technology,NX SAF BIO,P0
+Circularity & Sustainable Fuels,technology,NX PTU,P0
+Circularity & Sustainable Fuels,organization,NextChem,P0
+Circularity & Sustainable Fuels,geography,Indonesia,P1
+Circularity & Sustainable Fuels,geography,South-East Asia,P1
+Circularity & Sustainable Fuels,geography,Southern Africa,P2
+Caspian & Central Asia,geography,Caspian Area,P0
+Caspian & Central Asia,geography,Kazakhstan,P0
+Caspian & Central Asia,geography,Azerbaijan,P1
+Caspian & Central Asia,organization,KazMunayGas,P0
+Caspian & Central Asia,organization,KMGPetrochem,P0
+Caspian & Central Asia,organization,SOCAR,P1
+Caspian & Central Asia,organization,SOCAR Polymer,P1
+Africa Growth,geography,Africa,P0
+Africa Growth,geography,North Africa,P0
+Africa Growth,geography,Algeria,P0
+Africa Growth,geography,West Africa,P0
+Africa Growth,geography,Sub-Saharan Africa,P1
+Africa Growth,organization,Sonatrach,P1
+Africa Growth,organization,Fertiglobe,P1
+Africa Growth,technology,NX Stami Urea,P1
+Africa Growth,technology,NX Replast,P2
+Polyolefins & Petrochemicals,organization,QatarEnergy,P0
+Polyolefins & Petrochemicals,organization,Chevron Phillips Chemical,P0
+Polyolefins & Petrochemicals,organization,Covestro,P1
+Polyolefins & Petrochemicals,organization,SOCAR Polymer,P1
+Polyolefins & Petrochemicals,organization,Lummus Technology,P1
+Polyolefins & Petrochemicals,technology,Polymers,P1
+Polyolefins & Petrochemicals,organization,Tecnimont,P1
+MAIRE Portfolio & Governance,organization,MAIRE,P0
+MAIRE Portfolio & Governance,organization,Tecnimont,P0
+MAIRE Portfolio & Governance,organization,NextChem,P0
+MAIRE Portfolio & Governance,organization,Stamicarbon,P0
+MAIRE Portfolio & Governance,organization,KT Kinetics Technology,P0
+MAIRE Portfolio & Governance,organization,MET Development,P1

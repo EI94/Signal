@@ -1,0 +1,9 @@
+# Optional: copy snippets into environments/<env>/backend.tf after a GCS state bucket exists.
+# Do not commit real bucket names if they embed sensitive project hints.
+#
+# terraform {
+#   backend "gcs" {
+#     bucket = "YOUR_TF_STATE_BUCKET"
+#     prefix = "signal/dev"
+#   }
+# }
