@@ -31,6 +31,7 @@ const ORG_HQ_MAP: Record<string, string> = {
   worley: 'AU',
   wood: 'GB',
   'samsung-ea': 'KR',
+  'samsung-engineering': 'KR',
   mcdermott: 'US',
   'lummus-technology': 'US',
   'honeywell-uop': 'US',
@@ -49,6 +50,19 @@ const ORG_HQ_MAP: Record<string, string> = {
   sonatrach: 'DZ',
   kazmunaygas: 'KZ',
   socar: 'AZ',
+  eurochem: 'CH',
+  'transition-industries': 'MX',
+  basf: 'DE',
+  linde: 'IE',
+  'air-liquide': 'FR',
+  'air-products': 'US',
+  yara: 'NO',
+  sabic: 'SA',
+  exxonmobil: 'US',
+  shell: 'GB',
+  bp: 'GB',
+  eni: 'IT',
+  'petronas': 'MY',
 };
 
 function escapeRegex(s: string): string {
@@ -119,6 +133,32 @@ export async function buildGeographyEntityIndex(
 
   for (const [slug, iso2] of Object.entries(ORG_HQ_MAP)) {
     orgHqCountry.set(slug, iso2);
+  }
+
+  // Also read organization seeds so we can map UUID entityId → slug → HQ country
+  try {
+    const orgSnap = await seedsCol.where('entityType', '==', 'organization').get();
+    for (const doc of orgSnap.docs) {
+      const data = doc.data();
+      const entityId = data.entityId as string | undefined;
+      if (!entityId) continue;
+
+      const canonical = (data.canonicalName as string | undefined) ?? '';
+      const slug = canonical
+        .toLowerCase()
+        .replace(/&/g, '')
+        .replace(/[\s/]+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const iso2 = ORG_HQ_MAP[slug];
+      if (iso2) {
+        orgHqCountry.set(entityId, iso2);
+      }
+    }
+  } catch {
+    // Non-fatal: display-name fallback in deriveCountryCodes still works
   }
 
   const textPatterns = buildTextPatterns(snap, entityIdToIso2);

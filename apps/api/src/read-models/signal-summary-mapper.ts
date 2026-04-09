@@ -83,11 +83,21 @@ function deriveCountryCodes(
     };
   }
 
-  // Level 4: organization HQ fallback
+  // Level 4: organization HQ fallback (try entityId first, then slugified displayName)
   const hqCodes = new Set<string>();
   for (const ref of doc.entityRefs) {
     if (ref.entityType === 'organization') {
-      const hq = geoIndex.orgHqCountry.get(ref.entityId);
+      let hq = geoIndex.orgHqCountry.get(ref.entityId);
+      if (!hq && ref.displayName) {
+        const slug = ref.displayName
+          .toLowerCase()
+          .replace(/&/g, '')
+          .replace(/[\s/]+/g, '-')
+          .replace(/[^a-z0-9-]/g, '')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        hq = geoIndex.orgHqCountry.get(slug);
+      }
       if (hq) hqCodes.add(hq);
     }
   }
