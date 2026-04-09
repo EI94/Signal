@@ -3,6 +3,7 @@
 import type { PulseV1Response, SignalSummaryV1 } from '@signal/contracts';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchPulse } from '../../lib/api/fetch-pulse';
+import { triggerLiveRefresh } from '../../lib/api/trigger-live-refresh';
 import { useAuth } from '../auth/auth-provider';
 import { IntelSearch } from './intel-search';
 import { MarketStrip } from './market-strip';
@@ -16,7 +17,9 @@ const TIME_WINDOWS = [
   { label: '7d', hours: 168 },
 ] as const;
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_ACTIVE_MS = 15_000;
+const POLL_IDLE_MS = 60_000;
+const INGEST_TRIGGER_MS = 5 * 60_000;
 
 function timeAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -39,14 +42,36 @@ export function IntelligencePage() {
   const [newSignalCount, setNewSignalCount] = useState(0);
   const [freshnessText, setFreshnessText] = useState('');
   const prevTotalRef = useRef<number>(0);
+  const [isUserActive, setIsUserActive] = useState(true);
+  const lastIngestTriggerRef = useRef<number>(0);
 
-  // Tick freshness display every 10s
   useEffect(() => {
     const tick = () => setFreshnessText(lastUpdated ? timeAgo(lastUpdated) : '');
     tick();
-    const id = setInterval(tick, 10_000);
+    const id = setInterval(tick, 5_000);
     return () => clearInterval(id);
   }, [lastUpdated]);
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const markActive = () => {
+      setIsUserActive(true);
+      clearTimeout(timeout);
+      timeout = setTimeout(() => setIsUserActive(false), 3 * 60_000);
+    };
+    markActive();
+    window.addEventListener('mousemove', markActive, { passive: true });
+    window.addEventListener('keydown', markActive, { passive: true });
+    window.addEventListener('touchstart', markActive, { passive: true });
+    window.addEventListener('scroll', markActive, { passive: true });
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('mousemove', markActive);
+      window.removeEventListener('keydown', markActive);
+      window.removeEventListener('touchstart', markActive);
+      window.removeEventListener('scroll', markActive);
+    };
+  }, []);
 
   const loadData = useCallback(
     async (silent = false) => {
@@ -71,9 +96,18 @@ export function IntelligencePage() {
 
   useEffect(() => {
     loadData();
-    const id = setInterval(() => loadData(true), POLL_INTERVAL_MS);
+    const pollMs = isUserActive ? POLL_ACTIVE_MS : POLL_IDLE_MS;
+    const id = setInterval(() => loadData(true), pollMs);
     return () => clearInterval(id);
-  }, [loadData]);
+  }, [loadData, isUserActive]);
+
+  useEffect(() => {
+    if (!isUserActive) return;
+    const now = Date.now();
+    if (now - lastIngestTriggerRef.current < INGEST_TRIGGER_MS) return;
+    lastIngestTriggerRef.current = now;
+    triggerLiveRefresh();
+  }, [isUserActive]);
 
   const handleCountryClick = useCallback((iso2: string) => {
     setSelectedCountry((prev) => (prev === iso2 ? null : iso2));

@@ -63,6 +63,12 @@ export const IngestRunOnceSummarySchema = z.object({
   maxSourcesPerRunApplied: z.number().int().positive().nullable(),
   /** Sources not processed because `maxSourcesPerRun` truncated the list (full run only). */
   sourcesOmittedByCap: z.number().int().nonnegative(),
+  /** Intel orchestrate-pipeline called after persist. */
+  pipelineCalled: z.number().int().nonnegative().default(0),
+  /** Intel orchestrate-pipeline call failed (best-effort). */
+  pipelineCallFailed: z.number().int().nonnegative().default(0),
+  /** Intel orchestrate-pipeline call skipped (disabled or no base URL). */
+  pipelineCallSkipped: z.number().int().nonnegative().default(0),
 });
 
 export type IngestRunOnceSummary = z.infer<typeof IngestRunOnceSummarySchema>;

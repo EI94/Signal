@@ -36,6 +36,9 @@ describe('recordIngestRunCompleteMetering', () => {
     bigQueryUsageEventsTableId: 'usage_events',
     ingestRatePolicyEnabled: true,
     ingestMaxSourcesPerRun: 500,
+    intelBaseUrl: null,
+    intelSecret: null,
+    pipelineCalloutEnabled: false,
   };
 
   it('does not insert when metering disabled', async () => {
@@ -59,6 +62,9 @@ describe('recordIngestRunCompleteMetering', () => {
         skippedRatePolicy: 0,
         maxSourcesPerRunApplied: null,
         sourcesOmittedByCap: 0,
+        pipelineCalled: 0,
+        pipelineCallFailed: 0,
+        pipelineCallSkipped: 0,
       },
     });
     expect(insertFn).not.toHaveBeenCalled();
@@ -87,6 +93,9 @@ describe('recordIngestRunCompleteMetering', () => {
           skippedRatePolicy: 0,
           maxSourcesPerRunApplied: null,
           sourcesOmittedByCap: 0,
+          pipelineCalled: 0,
+          pipelineCallFailed: 0,
+          pipelineCallSkipped: 0,
         },
       },
     );

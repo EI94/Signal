@@ -53,6 +53,7 @@ import {
 } from './lib/record-usage-metering';
 import { createDefaultSendAlertEmailDeps, sendAlertEmail } from './lib/send-alert-email';
 import { createDefaultSendBriefEmailDeps, sendBriefEmail } from './lib/send-brief-email';
+import type { OrchestratePipelineRequest } from './lib/orchestrate-pipeline';
 
 const config = loadIntelRuntimeConfig();
 
@@ -484,6 +485,44 @@ async function start() {
     }
   });
 
+  app.post<{ Body: unknown }>('/internal/orchestrate-pipeline', async (request, reply) => {
+    if (config.intelInternalSecret !== null) {
+      const provided = request.headers['x-signal-intel-secret'];
+      if (provided !== config.intelInternalSecret) {
+        return reply.code(401).send({ ok: false, error: 'unauthorized' });
+      }
+    }
+
+    const body = request.body as Record<string, unknown> | null;
+    const sourceContentId = body?.sourceContentId;
+    if (!sourceContentId || typeof sourceContentId !== 'string') {
+      return reply.code(400).send({ ok: false, error: 'sourceContentId required' });
+    }
+
+    try {
+      const { orchestratePipeline } = await import('./lib/orchestrate-pipeline');
+      const result = await orchestratePipeline(
+        {
+          sourceContentId,
+          workspaceId: typeof body?.workspaceId === 'string' ? body.workspaceId : undefined,
+          observedAt: typeof body?.observedAt === 'string' ? body.observedAt : undefined,
+          sourceUrl: typeof body?.sourceUrl === 'string' ? body.sourceUrl : undefined,
+          sourceLabel: typeof body?.sourceLabel === 'string' ? body.sourceLabel : undefined,
+          publishedAt: typeof body?.publishedAt === 'string' ? body.publishedAt : undefined,
+          sourceCategory: typeof body?.sourceCategory === 'string' ? body.sourceCategory : undefined,
+          linkedEntityRefs: Array.isArray(body?.linkedEntityRefs) ? body.linkedEntityRefs as OrchestratePipelineRequest['linkedEntityRefs'] : undefined,
+          normalizedGcsUri: typeof body?.normalizedGcsUri === 'string' ? body.normalizedGcsUri : undefined,
+        },
+        config,
+      );
+      return reply.send(result);
+    } catch (err) {
+      request.log.error({ err }, 'orchestratePipeline failed');
+      const message = err instanceof Error ? err.message : 'unknown_error';
+      return reply.code(500).send({ ok: false, error: message });
+    }
+  });
+
   app.post<{ Body: unknown }>('/internal/send-test-alert-email', async (request, reply) => {
     if (config.intelInternalSecret !== null) {
       const provided = request.headers['x-signal-intel-secret'];
@@ -568,6 +607,115 @@ async function start() {
       return reply.code(500).send({ ok: false, error: message });
     }
   });
+
+  app.post<{ Body: unknown }>('/internal/trigger-ingest', async (request, reply) => {
+    if (config.intelInternalSecret !== null) {
+      const provided = request.headers['x-signal-intel-secret'];
+      if (provided !== config.intelInternalSecret) {
+        return reply.code(401).send({ ok: false, error: 'unauthorized' });
+      }
+    }
+
+    if (!config.toolIngestBaseUrl) {
+      return reply.send({ ok: true, triggered: false, reason: 'ingest_base_url_not_configured' });
+    }
+
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (config.toolIngestRunOnceSecret) {
+        headers['x-signal-ingest-secret'] = config.toolIngestRunOnceSecret;
+      }
+      const resp = await fetch(`${config.toolIngestBaseUrl}/internal/run-once`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(120_000),
+      });
+      const json = await resp.json().catch(() => ({}));
+      return reply.send({ ok: true, triggered: true, ingestResponse: json });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'unknown';
+      request.log.error({ err }, 'trigger-ingest failed');
+      return reply.send({ ok: true, triggered: false, reason: msg });
+    }
+  });
+
+  app.get<{ Params: { signalId: string }; Querystring: { workspaceId?: string } }>(
+    '/internal/enrich-signal/:signalId',
+    async (request, reply) => {
+      if (config.intelInternalSecret !== null) {
+        const provided = request.headers['x-signal-intel-secret'];
+        if (provided !== config.intelInternalSecret) {
+          return reply.code(401).send({ ok: false, error: 'unauthorized' });
+        }
+      }
+
+      const workspaceId = request.query.workspaceId ?? config.defaultWorkspaceId;
+      if (!workspaceId) {
+        return reply.code(400).send({ ok: false, error: 'workspace_id required' });
+      }
+
+      try {
+        const { enrichSignalOnDemand } = await import('./lib/enrich-signal-on-demand');
+        const result = await enrichSignalOnDemand(
+          { workspaceId, signalId: request.params.signalId },
+          config,
+        );
+        return reply.send({ ok: true, result });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'unknown_error';
+        if (message === 'signal_not_found') {
+          return reply.code(404).send({ ok: false, error: 'signal_not_found' });
+        }
+        request.log.error({ err }, 'enrich-signal-on-demand failed');
+        return reply.code(500).send({ ok: false, error: message });
+      }
+    },
+  );
+
+  app.post<{ Params: { signalId: string }; Body: unknown }>(
+    '/internal/signal-chat/:signalId',
+    async (request, reply) => {
+      if (config.intelInternalSecret !== null) {
+        const provided = request.headers['x-signal-intel-secret'];
+        if (provided !== config.intelInternalSecret) {
+          return reply.code(401).send({ ok: false, error: 'unauthorized' });
+        }
+      }
+
+      const body = request.body as Record<string, unknown> | null;
+      const workspaceId = typeof body?.workspaceId === 'string' ? body.workspaceId : config.defaultWorkspaceId;
+      if (!workspaceId) {
+        return reply.code(400).send({ ok: false, error: 'workspace_id required' });
+      }
+      const message = typeof body?.message === 'string' ? body.message : '';
+      if (!message) {
+        return reply.code(400).send({ ok: false, error: 'message required' });
+      }
+
+      try {
+        const { handleSignalChat } = await import('./lib/signal-chat');
+        const result = await handleSignalChat(
+          {
+            workspaceId,
+            signalId: request.params.signalId,
+            message,
+            history: Array.isArray(body?.history) ? body.history as Array<{ role: 'user' | 'model'; text: string }> : undefined,
+            provider: body?.provider === 'perplexity' ? 'perplexity' : body?.provider === 'gemini' ? 'gemini' : undefined,
+          },
+          config,
+        );
+        return reply.send({ ok: true, result });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown_error';
+        if (msg === 'signal_not_found') {
+          return reply.code(404).send({ ok: false, error: 'signal_not_found' });
+        }
+        request.log.error({ err }, 'signal-chat failed');
+        return reply.code(500).send({ ok: false, error: msg });
+      }
+    },
+  );
 
   try {
     await app.listen({ port: config.port, host: '0.0.0.0' });

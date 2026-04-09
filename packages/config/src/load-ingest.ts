@@ -68,6 +68,16 @@ export function loadIngestRuntimeConfig(env: NodeJS.ProcessEnv = process.env): I
 
   const ingestMaxSourcesPerRun = parsePositiveInt(env.SIGNAL_INGEST_MAX_SOURCES_PER_RUN, 500);
 
+  const intelBaseUrlRaw = env.SIGNAL_INTEL_BASE_URL?.trim();
+  const intelBaseUrl = intelBaseUrlRaw && intelBaseUrlRaw.length > 0 ? intelBaseUrlRaw : null;
+
+  const intelSecretRaw = env.SIGNAL_INTEL_SECRET?.trim();
+  const intelSecret = intelSecretRaw && intelSecretRaw.length > 0 ? intelSecretRaw : null;
+
+  const calloutRaw = env.SIGNAL_PIPELINE_CALLOUT_ENABLED?.trim().toLowerCase();
+  const pipelineCalloutEnabled =
+    calloutRaw === 'true' || calloutRaw === '1' || calloutRaw === 'yes';
+
   return Object.freeze({
     ...base,
     firebaseProjectId,
@@ -88,5 +98,8 @@ export function loadIngestRuntimeConfig(env: NodeJS.ProcessEnv = process.env): I
     bigQueryUsageEventsTableId,
     ingestRatePolicyEnabled,
     ingestMaxSourcesPerRun,
+    intelBaseUrl,
+    intelSecret,
+    pipelineCalloutEnabled,
   });
 }

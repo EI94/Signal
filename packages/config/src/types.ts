@@ -112,6 +112,15 @@ export type IngestRuntimeConfig = ServerRuntimeConfig<'ingest'> & {
   readonly ingestRatePolicyEnabled: boolean;
   /** Max sources processed per full `run-once` (after list order). Default 500. Single-source runs ignore the cap. */
   readonly ingestMaxSourcesPerRun: number;
+  /**
+   * Base URL for server-to-server calls from ingest → services/intel (orchestrate-pipeline).
+   * Example `http://localhost:4002`. When null, pipeline callout is skipped.
+   */
+  readonly intelBaseUrl: string | null;
+  /** Optional shared secret for `x-signal-intel-secret` when calling intel. */
+  readonly intelSecret: string | null;
+  /** When true, after each successful persist call intel `/internal/orchestrate-pipeline`. */
+  readonly pipelineCalloutEnabled: boolean;
 };
 export type IntelRuntimeConfig = ServerRuntimeConfig<'intel'> & {
   readonly firebaseProjectId: string;
@@ -159,6 +168,10 @@ export type IntelRuntimeConfig = ServerRuntimeConfig<'intel'> & {
   readonly perplexityBaseUrl: string;
   readonly perplexityModel: string;
   readonly perplexityTimeoutMs: number;
+  readonly geminiEnabled: boolean;
+  readonly geminiApiKey: string | null;
+  readonly geminiModel: string;
+  readonly geminiMaxCallsPerRun: number;
   /** When true, `POST /internal/evaluate-alerts` runs the deterministic engine. */
   readonly alertEvaluationEnabled: boolean;
   readonly bigQueryAlertEvaluationsTableId: string;

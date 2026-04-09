@@ -118,6 +118,24 @@ export function loadIntelRuntimeConfig(env: NodeJS.ProcessEnv = process.env): In
 
   const perplexityTimeoutMs = parsePositiveInt(env.SIGNAL_PERPLEXITY_TIMEOUT_MS, 45_000);
 
+  const geminiEnabledRaw = env.SIGNAL_GEMINI_ENABLED?.trim().toLowerCase();
+  const geminiEnabled =
+    geminiEnabledRaw === 'true' || geminiEnabledRaw === '1' || geminiEnabledRaw === 'yes';
+
+  let geminiApiKey: string | null = null;
+  if (geminiEnabled) {
+    const key = env.SIGNAL_GEMINI_API_KEY?.trim();
+    if (!key) {
+      throw new Error(
+        'Invalid runtime config: SIGNAL_GEMINI_API_KEY is required when SIGNAL_GEMINI_ENABLED is true.',
+      );
+    }
+    geminiApiKey = key;
+  }
+
+  const geminiModel = env.SIGNAL_GEMINI_MODEL?.trim() || 'gemini-2.0-flash';
+  const geminiMaxCallsPerRun = parseNonNegativeInt(env.SIGNAL_GEMINI_MAX_CALLS_PER_RUN, 50);
+
   const alertEvalRaw = env.SIGNAL_ALERT_EVALUATION_ENABLED?.trim().toLowerCase();
   const alertEvaluationEnabled =
     alertEvalRaw === 'true' || alertEvalRaw === '1' || alertEvalRaw === 'yes';
@@ -205,6 +223,10 @@ export function loadIntelRuntimeConfig(env: NodeJS.ProcessEnv = process.env): In
     perplexityBaseUrl,
     perplexityModel,
     perplexityTimeoutMs,
+    geminiEnabled,
+    geminiApiKey,
+    geminiModel,
+    geminiMaxCallsPerRun,
     alertEvaluationEnabled,
     bigQueryAlertEvaluationsTableId,
     briefGenerationEnabled,

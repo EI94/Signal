@@ -1,0 +1,13 @@
+canonicalUrl,sourceType,category,linkedEntityRefs,priorityTier,checkFrequencyBucket,authorityScore,notes
+https://www.reuters.com/business/energy/,web_page,general_market,,p1_high,every_6h,95,Reuters Energy — top-tier energy market news.
+https://www.upstreamonline.com/latest,web_page,general_market,,p1_high,every_6h,90,Upstream Online — oil and gas industry news.
+https://www.meed.com/sectors/energy,web_page,general_market,Middle East,p1_high,daily,90,MEED — Middle East engineering and construction intelligence.
+https://www.argusmedia.com/en/news,web_page,general_market,,p1_high,daily,90,Argus Media — commodity and energy market news.
+https://www.icis.com/explore/resources/news/,web_page,general_market,,p2_low,daily,85,ICIS — chemical and energy market intelligence.
+https://www.spglobal.com/commodityinsights/en/market-insights/latest-news/oil,web_page,general_market,,p1_high,daily,90,S&P Global Commodity Insights — oil market news.
+https://www.hydrogennewsletter.com/,web_page,general_market,Hydrogen & Circular Carbon,p2_low,weekly,80,Hydrogen industry news aggregator.
+https://www.ammoniaenergy.org/articles/,web_page,general_market,Nitrogen;NX Stami Ammonia;NX Stami Green Ammonia,p2_low,weekly,85,Ammonia Energy Association — green ammonia industry news.
+https://www.chemengonline.com/,web_page,general_market,,p2_low,weekly,80,Chemical Engineering — process industry news.
+https://energycapitalandpower.com/latest-news/,web_page,general_market,Africa,p2_low,daily,80,Energy Capital & Power — Africa energy sector coverage.
+https://www.zawya.com/en/business/energy,web_page,general_market,Middle East;United Arab Emirates;Saudi Arabia,p1_high,daily,85,Zawya — MENA business and energy intelligence.
+https://oilprice.com/Latest-Energy-News/World-News/,web_page,general_market,,p2_low,daily,80,OilPrice.com — global energy news aggregator.

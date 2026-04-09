@@ -6,6 +6,7 @@ import type {
 } from '@signal/contracts';
 import type admin from 'firebase-admin';
 import { archiveSourceContentAndPersistRow } from './archive-source-content';
+import { calloutIntelPipeline } from './callout-intel-pipeline';
 import { type PersistRequestPayload, processOneSource } from './process-one-source';
 import { publishSourceContentPersistedHandoff } from './publish-source-content-handoff';
 import { recordIngestRunCompleteMetering } from './record-usage-metering';
@@ -48,6 +49,11 @@ async function handleQualifyingPersistence(
     if (handoff === 'published') summary.published++;
     else if (handoff === 'publish_failed') summary.publishFailed++;
     else summary.publishSkipped++;
+
+    const callout = await calloutIntelPipeline(config, archived, persist);
+    if (callout === 'called') summary.pipelineCalled++;
+    else if (callout === 'call_failed') summary.pipelineCallFailed++;
+    else summary.pipelineCallSkipped++;
     await patchSourceOperationalFetchState(db, persist.source.sourceId, {
       lastFetchedAt: persist.observedAt,
       updatedAt: now,
@@ -115,6 +121,9 @@ export async function runOnceIngestCycle(
     skippedRatePolicy: 0,
     maxSourcesPerRunApplied,
     sourcesOmittedByCap,
+    pipelineCalled: 0,
+    pipelineCallFailed: 0,
+    pipelineCallSkipped: 0,
   };
 
   for (const source of sources) {

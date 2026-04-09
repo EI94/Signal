@@ -12,6 +12,7 @@ import { marketV1Routes } from './routes/market-v1';
 import { preferencesV1Routes } from './routes/preferences-v1';
 import { pulseV1Routes } from './routes/pulse-v1';
 import { searchV1Routes } from './routes/search-v1';
+import { signalIntelligenceV1Routes } from './routes/signal-intelligence-v1';
 import { servingV1Routes } from './routes/serving-v1';
 import { toolExposureV1Routes } from './routes/tool-exposure-v1';
 import { watchlistsV1Routes } from './routes/watchlists-v1';
@@ -56,6 +57,7 @@ export function buildApp(config: ApiRuntimeConfig) {
     bigquery,
   });
   app.register(pulseV1Routes, { prefix: '/v1', config });
+  app.register(signalIntelligenceV1Routes, { prefix: '/v1', config });
   app.register(searchV1Routes, { prefix: '/v1', config });
   app.register(marketV1Routes, { prefix: '/v1', config });
   app.register(preferencesV1Routes, { prefix: '/v1', config });

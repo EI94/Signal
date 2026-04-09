@@ -87,6 +87,9 @@ function ingestConfig(over: Partial<IngestRuntimeConfig> = {}): IngestRuntimeCon
     bigQueryUsageEventsTableId: 'usage_events',
     ingestRatePolicyEnabled: true,
     ingestMaxSourcesPerRun: 500,
+    intelBaseUrl: null,
+    intelSecret: null,
+    pipelineCalloutEnabled: false,
     ...over,
   };
 }

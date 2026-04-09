@@ -2,8 +2,12 @@ import type { IntelRuntimeConfig } from '@signal/config';
 import type { PromoteSourceContentSignalsRequest } from '@signal/contracts';
 import { SIGNAL_PROMOTION_SCORING_VERSION } from '@signal/contracts';
 import { deleteSignalArtifactsForSignalIds } from './delete-signal-artifacts-for-signal-ids';
+import { downloadObjectBytes } from './download-object';
 import { evaluateUserAlertsForSignal } from './evaluate-user-alerts';
 import { getFirestoreDb, initFirebaseAdmin } from './firebase-admin';
+import { parseGcsUri } from './gcs-uri';
+import { enrichSignalWithGemini } from './gemini-enrichment';
+import { lookupSourceLabel } from './lookup-source-label';
 import { insertSignalAnalyticalRows } from './persist-promoted-signals';
 import { buildLatestSignalDocument, writeSignalsLatestDocuments } from './project-signal-latest';
 import {
@@ -11,6 +15,7 @@ import {
   type PromotedSignalBundle,
 } from './promote-extracted-events-to-signals';
 import { queryExtractedEventsForSourceContent } from './query-extracted-events-for-source-content';
+import { querySourceContentMetadata } from './query-source-content-metadata';
 import { updateSourceContentPromotionStatus } from './update-source-content-promotion-status';
 
 export type PromoteProcessDeps = {
@@ -26,6 +31,8 @@ export type PromoteProcessDeps = {
     publishedAt?: Date | null;
   }) => Promise<void>;
   updatePromotionStatus: typeof updateSourceContentPromotionStatus;
+  resolveSourceMetadata: (sourceContentId: string) => Promise<{ sourceUrl: string; sourceId: string; publishedAt: Date | null; normalizedGcsUri: string | null } | null>;
+  lookupSourceLabel: (sourceId: string) => Promise<string | null>;
 };
 
 export type PromoteSourceContentSignalsResult =
@@ -103,15 +110,74 @@ export async function processPromoteSourceContentSignals(
       entityLinks: bundles.flatMap((b) => b.entityLinks),
     });
 
-    const publishedAt = body.publishedAt ? new Date(body.publishedAt) : null;
+    let resolvedSourceUrl = body.sourceUrl;
+    let resolvedSourceLabel = body.sourceLabel;
+    let resolvedPublishedAt = body.publishedAt ? new Date(body.publishedAt) : null;
+    let normalizedGcsUri: string | null = null;
+
+    try {
+      const meta = await deps.resolveSourceMetadata(body.sourceContentId);
+      if (meta) {
+        if (!resolvedSourceUrl && meta.sourceUrl) resolvedSourceUrl = meta.sourceUrl;
+        if (!resolvedPublishedAt && meta.publishedAt) resolvedPublishedAt = meta.publishedAt;
+        normalizedGcsUri = meta.normalizedGcsUri;
+        if (!resolvedSourceLabel && meta.sourceId) {
+          const label = await deps.lookupSourceLabel(meta.sourceId);
+          if (label) resolvedSourceLabel = label;
+        }
+      }
+    } catch (err) {
+      console.warn('[promote] source metadata resolution failed, continuing without', err);
+    }
+
+    if (config.geminiEnabled && config.geminiApiKey && config.geminiMaxCallsPerRun > 0) {
+      let sourceText: string | null = null;
+      if (normalizedGcsUri) {
+        try {
+          const loc = parseGcsUri(normalizedGcsUri);
+          const buf = await downloadObjectBytes({
+            projectId: config.firebaseProjectId,
+            bucketName: loc.bucket,
+            objectKey: loc.objectKey,
+          });
+          sourceText = buf.toString('utf8');
+        } catch (err) {
+          console.warn('[promote] failed to load source text for Gemini enrichment:', err);
+        }
+      }
+
+      if (sourceText) {
+        let geminiCallCount = 0;
+        for (const bundle of bundles) {
+          if (geminiCallCount >= config.geminiMaxCallsPerRun) break;
+          try {
+            const enrichment = await enrichSignalWithGemini(config, {
+              title: bundle.signalRow.title,
+              rawText: sourceText,
+              entityRefs: bundle.signalRow.entity_refs_json ?? [],
+              signalType: bundle.signalRow.signal_type,
+            });
+            geminiCallCount++;
+            if (enrichment) {
+              if (enrichment.summary) {
+                bundle.signalRow.short_summary = enrichment.summary;
+              }
+            }
+          } catch (err) {
+            console.warn('[promote] Gemini enrichment failed for signal %s:', bundle.signalRow.signal_id, err);
+          }
+        }
+        console.info('[promote] Gemini enriched %d/%d bundles', geminiCallCount, bundles.length);
+      }
+    }
 
     await deps.writeLatestProjection({
       workspaceId,
       sourceContentId: body.sourceContentId,
       bundles,
-      sourceUrl: body.sourceUrl,
-      sourceLabel: body.sourceLabel,
-      publishedAt,
+      sourceUrl: resolvedSourceUrl,
+      sourceLabel: resolvedSourceLabel,
+      publishedAt: resolvedPublishedAt,
     });
 
     await deps.updatePromotionStatus({
@@ -202,5 +268,13 @@ export function createDefaultPromoteDeps(config: IntelRuntimeConfig): PromotePro
       await writeSignalsLatestDocuments({ db: getDb(), workspaceId, documents });
     },
     updatePromotionStatus: updateSourceContentPromotionStatus,
+    resolveSourceMetadata: (sourceContentId) =>
+      querySourceContentMetadata({
+        projectId: config.firebaseProjectId,
+        datasetId: config.bigQueryDatasetId,
+        tableId: config.bigQuerySourceContentsTableId,
+        sourceContentId,
+      }),
+    lookupSourceLabel: (sourceId) => lookupSourceLabel(getDb(), sourceId),
   };
 }
