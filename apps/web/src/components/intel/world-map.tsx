@@ -34,34 +34,6 @@ const SIGNAL_TYPE_DOT: Record<string, { color: string; label: string }> = {
   technology_milestone: { color: '#9b59b6', label: 'Tech' },
 };
 
-const CAPITAL_XY: Record<string, [number, number]> = {
-  AE: [651, 182], QA: [643, 180], SA: [630, 181], KW: [633, 169],
-  OM: [663, 184], BH: [640, 177], IQ: [623, 157], IR: [643, 151],
-  EG: [587, 167], DZ: [509, 148], LY: [537, 159], NG: [521, 225],
-  AO: [537, 274], MZ: [591, 322], ZA: [578, 321], KE: [603, 254],
-  TZ: [610, 269], ET: [608, 225], US: [255, 160], CA: [248, 110],
-  GB: [500, 107], FR: [507, 114], DE: [537, 104], IT: [535, 134],
-  ES: [489, 138], NL: [514, 105], NO: [538, 75], SE: [550, 85],
-  FI: [569, 83], RU: [720, 95], TR: [591, 139], IN: [715, 170],
-  CN: [823, 139], JP: [888, 151], KR: [853, 146], AU: [914, 348],
-  NZ: [985, 365], BR: [367, 293], AR: [338, 346], CL: [304, 342],
-  MX: [225, 196], CO: [294, 237], PE: [286, 283], VE: [314, 221],
-  ID: [797, 267], MY: [782, 241], SG: [788, 246], TH: [779, 212],
-  VN: [794, 192], PH: [836, 210], PK: [703, 157], BD: [751, 184],
-  KZ: [698, 108], UZ: [680, 130], TM: [660, 138], AZ: [614, 135],
-  GE: [606, 131], UA: [574, 114], PL: [545, 110], RO: [558, 122],
-  GR: [549, 137], CZ: [540, 113], HU: [548, 119], AT: [540, 118],
-  CH: [524, 119], BE: [512, 110], PT: [484, 138], IE: [490, 105],
-  DK: [530, 98], IS: [470, 75], CY: [574, 148], IL: [579, 163],
-  JO: [580, 163], LB: [580, 155], SY: [588, 150], YE: [632, 196],
-  SD: [574, 207], SO: [620, 240], MW: [580, 306], GH: [500, 226],
-  SN: [478, 210], CI: [492, 225], CM: [534, 238], CD: [555, 261],
-  ZM: [564, 301], ZW: [573, 312], TN: [530, 148], MA: [490, 156],
-  ML: [497, 207], NE: [522, 207], TD: [547, 213], CF: [549, 237],
-  GA: [530, 250], CG: [541, 255], UG: [575, 251], RW: [573, 256],
-  MG: [619, 312], MM: [767, 195],
-};
-
 function fixDateLinePath(d: string): string {
   const parts = d.split(/(?=[MLHVCSQTAZ])/i);
   let lastX = 0;
@@ -102,29 +74,9 @@ type SignalDot = {
   topScore: number;
 };
 
-function computePathCenter(d: string): [number, number] {
-  let sumX = 0;
-  let sumY = 0;
-  let n = 0;
-  const re = /([ML])\s*([\d.]+)[,\s]([\d.]+)/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(d)) !== null) {
-    const x = Number.parseFloat(m[2] ?? '0');
-    const y = Number.parseFloat(m[3] ?? '0');
-    if (x > 960 || x < 40) continue;
-    sumX += x;
-    sumY += y;
-    n++;
-  }
-  if (n === 0) return [500, 250];
-  return [sumX / n, sumY / n];
-}
-
 function getCountryCenter(iso2: string): [number, number] {
-  const manual = CAPITAL_XY[iso2];
-  if (manual) return manual;
   const entry = COUNTRY_PATHS.find((c) => c.iso2 === iso2);
-  if (entry) return computePathCenter(entry.d);
+  if (entry) return [entry.cx, entry.cy];
   return [500, 250];
 }
 
