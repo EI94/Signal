@@ -143,7 +143,7 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
             {msg.citations && msg.citations.length > 0 && (
               <div className="signal-chat__citations">
                 <span className="signal-chat__citations-label">Sources:</span>
-                {msg.citations.map((c) => (
+                {msg.citations.map((c, i) => (
                   <a
                     key={c}
                     href={c}
@@ -151,7 +151,7 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
                     rel="noopener noreferrer"
                     className="signal-chat__citation-link"
                   >
-                    [{ci + 1}]
+                    [{i + 1}]
                   </a>
                 ))}
               </div>
