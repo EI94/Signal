@@ -1,8 +1,8 @@
 import type { IntelRuntimeConfig } from '@signal/config';
-import { getFirestoreDb, initFirebaseAdmin } from './firebase-admin';
-import { enrichSignalWithGemini } from './gemini-enrichment';
 import { downloadObjectBytes } from './download-object';
+import { getFirestoreDb, initFirebaseAdmin } from './firebase-admin';
 import { parseGcsUri } from './gcs-uri';
+import { enrichSignalWithGemini } from './gemini-enrichment';
 import { querySourceContentMetadata } from './query-source-content-metadata';
 
 export type EnrichSignalResult = {
@@ -37,10 +37,18 @@ export async function enrichSignalOnDemand(
     return {
       signalId: params.signalId,
       enrichedSummary: data.enrichedSummary as string,
-      countryCodes: Array.isArray(data.enrichedCountryCodes) ? data.enrichedCountryCodes as string[] : [],
+      countryCodes: Array.isArray(data.enrichedCountryCodes)
+        ? (data.enrichedCountryCodes as string[])
+        : [],
       cityName: typeof data.enrichedCityName === 'string' ? data.enrichedCityName : null,
-      sourceUrl: typeof data.provenance === 'object' && data.provenance ? (data.provenance as Record<string, unknown>).sourceUrl as string ?? null : null,
-      sourceLabel: typeof data.provenance === 'object' && data.provenance ? (data.provenance as Record<string, unknown>).sourceLabel as string ?? null : null,
+      sourceUrl:
+        typeof data.provenance === 'object' && data.provenance
+          ? (((data.provenance as Record<string, unknown>).sourceUrl as string) ?? null)
+          : null,
+      sourceLabel:
+        typeof data.provenance === 'object' && data.provenance
+          ? (((data.provenance as Record<string, unknown>).sourceLabel as string) ?? null)
+          : null,
       cached: true,
     };
   }
@@ -51,16 +59,23 @@ export async function enrichSignalOnDemand(
       enrichedSummary: null,
       countryCodes: [],
       cityName: null,
-      sourceUrl: typeof data.provenance === 'object' && data.provenance ? (data.provenance as Record<string, unknown>).sourceUrl as string ?? null : null,
-      sourceLabel: typeof data.provenance === 'object' && data.provenance ? (data.provenance as Record<string, unknown>).sourceLabel as string ?? null : null,
+      sourceUrl:
+        typeof data.provenance === 'object' && data.provenance
+          ? (((data.provenance as Record<string, unknown>).sourceUrl as string) ?? null)
+          : null,
+      sourceLabel:
+        typeof data.provenance === 'object' && data.provenance
+          ? (((data.provenance as Record<string, unknown>).sourceLabel as string) ?? null)
+          : null,
       cached: false,
     };
   }
 
   let sourceText: string | null = null;
-  const contentRef = typeof data.provenance === 'object' && data.provenance
-    ? (data.provenance as Record<string, unknown>).contentRef as string | undefined
-    : undefined;
+  const contentRef =
+    typeof data.provenance === 'object' && data.provenance
+      ? ((data.provenance as Record<string, unknown>).contentRef as string | undefined)
+      : undefined;
 
   if (contentRef) {
     try {
@@ -95,7 +110,10 @@ export async function enrichSignalOnDemand(
     signalType,
   });
 
-  const provenance = typeof data.provenance === 'object' && data.provenance ? data.provenance as Record<string, unknown> : {};
+  const provenance =
+    typeof data.provenance === 'object' && data.provenance
+      ? (data.provenance as Record<string, unknown>)
+      : {};
 
   if (enrichment) {
     await signalRef.update({
@@ -111,8 +129,8 @@ export async function enrichSignalOnDemand(
     enrichedSummary: enrichment?.summary ?? null,
     countryCodes: enrichment?.countryCodes ?? [],
     cityName: enrichment?.cityName ?? null,
-    sourceUrl: provenance.sourceUrl as string ?? null,
-    sourceLabel: provenance.sourceLabel as string ?? null,
+    sourceUrl: (provenance.sourceUrl as string) ?? null,
+    sourceLabel: (provenance.sourceLabel as string) ?? null,
     cached: false,
   };
 }

@@ -145,7 +145,8 @@ export async function orchestratePipeline(
       config,
       deps,
     );
-    const eventCount = 'extractedEventCount' in extractResult ? extractResult.extractedEventCount : 0;
+    const eventCount =
+      'extractedEventCount' in extractResult ? extractResult.extractedEventCount : 0;
     result.steps.extract = { status: 'ok', eventCount };
     if (eventCount === 0) {
       result.steps.promote = { status: 'skipped', detail: 'no_events_extracted' };
@@ -178,7 +179,8 @@ export async function orchestratePipeline(
       config,
       deps,
     );
-    const signalCount = 'promotedSignalCount' in promoteResult ? promoteResult.promotedSignalCount : 0;
+    const signalCount =
+      'promotedSignalCount' in promoteResult ? promoteResult.promotedSignalCount : 0;
     result.steps.promote = { status: 'ok', signalCount };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'unknown';

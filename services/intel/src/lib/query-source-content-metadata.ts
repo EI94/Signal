@@ -41,6 +41,7 @@ export async function querySourceContentMetadata(params: {
     sourceId: String(r.source_id),
     sourceUrl: String(r.source_url ?? ''),
     publishedAt: pubAt,
-    normalizedGcsUri: typeof r.normalized_gcs_uri === 'string' ? String(r.normalized_gcs_uri) : null,
+    normalizedGcsUri:
+      typeof r.normalized_gcs_uri === 'string' ? String(r.normalized_gcs_uri) : null,
   };
 }

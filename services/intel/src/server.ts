@@ -27,6 +27,7 @@ import {
   createDefaultGenerateMorningBriefDeps,
   generateMorningBrief,
 } from './lib/generate-morning-brief';
+import type { OrchestratePipelineRequest } from './lib/orchestrate-pipeline';
 import { checkAlertCooldown, insertAlertEvaluationRows } from './lib/persist-alert-evaluation';
 import {
   createDefaultExtractDeps,
@@ -53,7 +54,6 @@ import {
 } from './lib/record-usage-metering';
 import { createDefaultSendAlertEmailDeps, sendAlertEmail } from './lib/send-alert-email';
 import { createDefaultSendBriefEmailDeps, sendBriefEmail } from './lib/send-brief-email';
-import type { OrchestratePipelineRequest } from './lib/orchestrate-pipeline';
 
 const config = loadIntelRuntimeConfig();
 
@@ -509,9 +509,13 @@ async function start() {
           sourceUrl: typeof body?.sourceUrl === 'string' ? body.sourceUrl : undefined,
           sourceLabel: typeof body?.sourceLabel === 'string' ? body.sourceLabel : undefined,
           publishedAt: typeof body?.publishedAt === 'string' ? body.publishedAt : undefined,
-          sourceCategory: typeof body?.sourceCategory === 'string' ? body.sourceCategory : undefined,
-          linkedEntityRefs: Array.isArray(body?.linkedEntityRefs) ? body.linkedEntityRefs as OrchestratePipelineRequest['linkedEntityRefs'] : undefined,
-          normalizedGcsUri: typeof body?.normalizedGcsUri === 'string' ? body.normalizedGcsUri : undefined,
+          sourceCategory:
+            typeof body?.sourceCategory === 'string' ? body.sourceCategory : undefined,
+          linkedEntityRefs: Array.isArray(body?.linkedEntityRefs)
+            ? (body.linkedEntityRefs as OrchestratePipelineRequest['linkedEntityRefs'])
+            : undefined,
+          normalizedGcsUri:
+            typeof body?.normalizedGcsUri === 'string' ? body.normalizedGcsUri : undefined,
         },
         config,
       );
@@ -633,7 +637,7 @@ async function start() {
             signal: AbortSignal.timeout(5_000),
           });
           if (metaResp.ok) {
-            headers['Authorization'] = `Bearer ${await metaResp.text()}`;
+            headers.Authorization = `Bearer ${await metaResp.text()}`;
           }
         } catch {
           request.log.warn('Failed to get IAM token for ingest callout');
@@ -698,7 +702,8 @@ async function start() {
       }
 
       const body = request.body as Record<string, unknown> | null;
-      const workspaceId = typeof body?.workspaceId === 'string' ? body.workspaceId : config.defaultWorkspaceId;
+      const workspaceId =
+        typeof body?.workspaceId === 'string' ? body.workspaceId : config.defaultWorkspaceId;
       if (!workspaceId) {
         return reply.code(400).send({ ok: false, error: 'workspace_id required' });
       }
@@ -714,8 +719,15 @@ async function start() {
             workspaceId,
             signalId: request.params.signalId,
             message,
-            history: Array.isArray(body?.history) ? body.history as Array<{ role: 'user' | 'model'; text: string }> : undefined,
-            provider: body?.provider === 'perplexity' ? 'perplexity' : body?.provider === 'gemini' ? 'gemini' : undefined,
+            history: Array.isArray(body?.history)
+              ? (body.history as Array<{ role: 'user' | 'model'; text: string }>)
+              : undefined,
+            provider:
+              body?.provider === 'perplexity'
+                ? 'perplexity'
+                : body?.provider === 'gemini'
+                  ? 'gemini'
+                  : undefined,
           },
           config,
         );

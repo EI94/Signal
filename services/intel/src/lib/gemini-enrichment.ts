@@ -44,9 +44,7 @@ export async function enrichSignalWithGemini(
     .map((e) => `${e.entityType}: ${e.displayName ?? e.entityId}`)
     .join(', ');
 
-  const textSnippet = params.rawText.length > 4000
-    ? params.rawText.slice(0, 4000)
-    : params.rawText;
+  const textSnippet = params.rawText.length > 4000 ? params.rawText.slice(0, 4000) : params.rawText;
 
   const userPrompt = [
     `Signal type: ${params.signalType}`,
@@ -59,9 +57,7 @@ export async function enrichSignalWithGemini(
     const client = getClient(config.geminiApiKey);
     const model = client.getGenerativeModel({ model: config.geminiModel });
     const result = await model.generateContent({
-      contents: [
-        { role: 'user', parts: [{ text: ENRICHMENT_PROMPT + '\n\n' + userPrompt }] },
-      ],
+      contents: [{ role: 'user', parts: [{ text: `${ENRICHMENT_PROMPT}\n\n${userPrompt}` }] }],
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 512,
@@ -81,13 +77,15 @@ export async function enrichSignalWithGemini(
           .map((c) => c.toUpperCase())
       : [];
 
-    const cityName = typeof parsed.cityName === 'string' && parsed.cityName.length > 0
-      ? parsed.cityName
-      : null;
+    const cityName =
+      typeof parsed.cityName === 'string' && parsed.cityName.length > 0 ? parsed.cityName : null;
 
     return { summary, countryCodes, cityName };
   } catch (err) {
-    console.warn('[gemini-enrichment] call failed, continuing without enrichment:', err instanceof Error ? err.message : err);
+    console.warn(
+      '[gemini-enrichment] call failed, continuing without enrichment:',
+      err instanceof Error ? err.message : err,
+    );
     return null;
   }
 }

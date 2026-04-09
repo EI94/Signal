@@ -33,15 +33,13 @@ function signalFromDoc(s: LatestSignalDocument): BriefEmailSignal {
 
 function renderSignalRow(s: BriefEmailSignal): string {
   const typeLabel = humanSignalType(s.signalType);
-  const summary =
-    s.shortSummary && s.shortSummary.trim()
-      ? `<span style="display:block;margin-top:4px;font-size:14px;color:#4b5563;line-height:1.45;">${escapeHtml(s.shortSummary.trim())}</span>`
-      : '';
+  const summary = s.shortSummary?.trim()
+    ? `<span style="display:block;margin-top:4px;font-size:14px;color:#4b5563;line-height:1.45;">${escapeHtml(s.shortSummary.trim())}</span>`
+    : '';
 
-  const sourceLink =
-    s.sourceUrl && s.sourceUrl.startsWith('http')
-      ? `<a href="${escapeHtml(s.sourceUrl)}" style="color:#6b7280;font-size:12px;text-decoration:underline;">${escapeHtml(s.sourceLabel ?? 'Source')}</a>`
-      : '';
+  const sourceLink = s.sourceUrl?.startsWith('http')
+    ? `<a href="${escapeHtml(s.sourceUrl)}" style="color:#6b7280;font-size:12px;text-decoration:underline;">${escapeHtml(s.sourceLabel ?? 'Source')}</a>`
+    : '';
 
   const signalLink = `<a href="${PRODUCT_URL}?signal=${encodeURIComponent(s.signalId)}" style="color:#1a6dd4;font-size:12px;text-decoration:none;font-weight:500;">Read on Signal&nbsp;→</a>`;
 
@@ -135,7 +133,7 @@ export function buildBriefEmailHtml(params: {
 </tr>`;
 
   let execHtml = '';
-  if (executiveSummary && executiveSummary.trim()) {
+  if (executiveSummary?.trim()) {
     execHtml = `
 <tr>
 <td style="padding:0 32px 20px;">
@@ -203,7 +201,7 @@ export function buildBriefEmailPlainText(params: {
   const { title, dateLabel, signals, executiveSummary } = params;
   const lines: string[] = [title, dateLabel, ''];
 
-  if (executiveSummary && executiveSummary.trim()) {
+  if (executiveSummary?.trim()) {
     lines.push('EXECUTIVE SUMMARY', executiveSummary.trim(), '');
   }
 

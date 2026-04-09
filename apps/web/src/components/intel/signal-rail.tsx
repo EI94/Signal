@@ -128,9 +128,7 @@ export function SignalRail({ signals, onSignalClick, selectedCountry }: SignalRa
   const countryName = selectedCountry ? countryDisplayName(selectedCountry) : null;
   const groups = groupSignals(signals);
 
-  const title = countryName
-    ? `What changed in ${countryName}`
-    : 'What changed — worldwide';
+  const title = countryName ? `What changed in ${countryName}` : 'What changed — worldwide';
 
   const countLabel = countryName
     ? `${signals.length} signal${signals.length !== 1 ? 's' : ''} · ${countryName}`

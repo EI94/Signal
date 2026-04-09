@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { IntelRuntimeConfig } from '@signal/config';
-import { getFirestoreDb, initFirebaseAdmin } from './firebase-admin';
 import { downloadObjectBytes } from './download-object';
+import { getFirestoreDb, initFirebaseAdmin } from './firebase-admin';
 import { parseGcsUri } from './gcs-uri';
 import { querySourceContentMetadata } from './query-source-content-metadata';
 
@@ -56,10 +56,10 @@ async function chatWithPerplexity(
     signal: AbortSignal.timeout(config.perplexityTimeoutMs),
   });
   if (!resp.ok) throw new Error(`Perplexity API error: ${resp.status}`);
-  const json = await resp.json() as Record<string, unknown>;
+  const json = (await resp.json()) as Record<string, unknown>;
   const choices = json.choices as Array<{ message: { content: string } }> | undefined;
   const reply = choices?.[0]?.message?.content ?? '';
-  const citations = Array.isArray(json.citations) ? json.citations as string[] : [];
+  const citations = Array.isArray(json.citations) ? (json.citations as string[]) : [];
   return { reply, citations };
 }
 
@@ -80,13 +80,22 @@ export async function handleSignalChat(
   const data = snap.data() as Record<string, unknown>;
 
   const title = typeof data.title === 'string' ? data.title : '';
-  const summary = typeof data.enrichedSummary === 'string' ? data.enrichedSummary
-    : typeof data.shortSummary === 'string' ? data.shortSummary : '';
+  const summary =
+    typeof data.enrichedSummary === 'string'
+      ? data.enrichedSummary
+      : typeof data.shortSummary === 'string'
+        ? data.shortSummary
+        : '';
   const signalType = typeof data.signalType === 'string' ? data.signalType : '';
   const entityRefs = Array.isArray(data.entityRefs)
-    ? (data.entityRefs as Array<{ displayName?: string; entityId: string }>).map(e => e.displayName ?? e.entityId).join(', ')
+    ? (data.entityRefs as Array<{ displayName?: string; entityId: string }>)
+        .map((e) => e.displayName ?? e.entityId)
+        .join(', ')
     : '';
-  const provenance = typeof data.provenance === 'object' && data.provenance ? data.provenance as Record<string, unknown> : {};
+  const provenance =
+    typeof data.provenance === 'object' && data.provenance
+      ? (data.provenance as Record<string, unknown>)
+      : {};
   const sourceUrl = typeof provenance.sourceUrl === 'string' ? provenance.sourceUrl : '';
   const sourceLabel = typeof provenance.sourceLabel === 'string' ? provenance.sourceLabel : '';
 
@@ -109,7 +118,9 @@ export async function handleSignalChat(
         });
         sourceSnippet = buf.toString('utf8').slice(0, 6000);
       }
-    } catch { /* best effort */ }
+    } catch {
+      /* best effort */
+    }
   }
 
   const signalContext = [
@@ -119,7 +130,9 @@ export async function handleSignalChat(
     `Entities: ${entityRefs}`,
     `Source: ${sourceLabel} (${sourceUrl})`,
     sourceSnippet ? `\nSource text excerpt:\n${sourceSnippet}` : '',
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   const fullSystemPrompt = `${SYSTEM_PROMPT}\n\n--- SIGNAL CONTEXT ---\n${signalContext}\n--- END CONTEXT ---`;
 
@@ -127,7 +140,10 @@ export async function handleSignalChat(
 
   if (provider === 'perplexity' && config.perplexityEnabled && config.perplexityApiKey) {
     const messages = [
-      ...(req.history ?? []).map(h => ({ role: h.role === 'model' ? 'assistant' : 'user', content: h.text })),
+      ...(req.history ?? []).map((h) => ({
+        role: h.role === 'model' ? 'assistant' : 'user',
+        content: h.text,
+      })),
       { role: 'user', content: req.message },
     ];
     const result = await chatWithPerplexity(config, fullSystemPrompt, messages);
@@ -145,7 +161,7 @@ export async function handleSignalChat(
   });
 
   const chat = model.startChat({
-    history: (req.history ?? []).map(h => ({
+    history: (req.history ?? []).map((h) => ({
       role: h.role,
       parts: [{ text: h.text }],
     })),

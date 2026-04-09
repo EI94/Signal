@@ -19,7 +19,7 @@ async function proxyToIntel(
     headers['x-signal-intel-secret'] = config.toolIntelSecret;
   }
   const authz = await getCloudRunAuthorizationHeader(config.toolIntelBaseUrl);
-  if (authz) headers['Authorization'] = authz;
+  if (authz) headers.Authorization = authz;
 
   const resp = await fetch(`${config.toolIntelBaseUrl}${path}`, {
     method: opts.method ?? 'GET',
@@ -100,7 +100,7 @@ export const signalIntelligenceV1Routes: FastifyPluginAsync<{
       headers['x-signal-intel-secret'] = config.toolIntelSecret;
     }
     const lrAuthz = await getCloudRunAuthorizationHeader(config.toolIntelBaseUrl);
-    if (lrAuthz) headers['Authorization'] = lrAuthz;
+    if (lrAuthz) headers.Authorization = lrAuthz;
 
     try {
       const resp = await fetch(`${config.toolIntelBaseUrl}/internal/trigger-ingest`, {

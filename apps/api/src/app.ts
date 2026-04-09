@@ -12,8 +12,8 @@ import { marketV1Routes } from './routes/market-v1';
 import { preferencesV1Routes } from './routes/preferences-v1';
 import { pulseV1Routes } from './routes/pulse-v1';
 import { searchV1Routes } from './routes/search-v1';
-import { signalIntelligenceV1Routes } from './routes/signal-intelligence-v1';
 import { servingV1Routes } from './routes/serving-v1';
+import { signalIntelligenceV1Routes } from './routes/signal-intelligence-v1';
 import { toolExposureV1Routes } from './routes/tool-exposure-v1';
 import { watchlistsV1Routes } from './routes/watchlists-v1';
 

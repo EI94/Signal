@@ -36,7 +36,7 @@ export async function calloutIntelPipeline(
 
   const idToken = await getCloudRunIdToken(config.intelBaseUrl);
   if (idToken) {
-    headers['Authorization'] = `Bearer ${idToken}`;
+    headers.Authorization = `Bearer ${idToken}`;
   }
 
   const body = JSON.stringify({
@@ -51,17 +51,33 @@ export async function calloutIntelPipeline(
   });
 
   try {
-    const resp = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(120_000) });
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers,
+      body,
+      signal: AbortSignal.timeout(120_000),
+    });
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
-      console.error('[ingest→intel] orchestrate-pipeline returned %d: %s', resp.status, text.slice(0, 500));
+      console.error(
+        '[ingest→intel] orchestrate-pipeline returned %d: %s',
+        resp.status,
+        text.slice(0, 500),
+      );
       return 'call_failed';
     }
     const result = await resp.json();
-    console.info('[ingest→intel] orchestrate-pipeline ok for %s: %j', archived.sourceContentId, result);
+    console.info(
+      '[ingest→intel] orchestrate-pipeline ok for %s: %j',
+      archived.sourceContentId,
+      result,
+    );
     return 'called';
   } catch (err) {
-    console.error('[ingest→intel] orchestrate-pipeline call failed:', err instanceof Error ? err.message : err);
+    console.error(
+      '[ingest→intel] orchestrate-pipeline call failed:',
+      err instanceof Error ? err.message : err,
+    );
     return 'call_failed';
   }
 }

@@ -1,45 +1,71 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { type ChatMessage, type ChatResponse, fetchSignalChat } from '../../lib/api/fetch-signal-chat';
+import {
+  type ChatMessage,
+  type ChatResponse,
+  fetchSignalChat,
+} from '../../lib/api/fetch-signal-chat';
 
 type SignalChatProps = {
   signalId: string;
   signalTitle: string;
 };
 
+type ChatMsgUI = ChatMessage & { id: string; citations?: string[] };
+let msgCounter = 0;
+
 export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
-  const [messages, setMessages] = useState<Array<ChatMessage & { citations?: string[] }>>([]);
+  const [messages, setMessages] = useState<ChatMsgUI[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [provider, setProvider] = useState<'gemini' | 'perplexity'>('perplexity');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const doSend = useCallback(async (text: string) => {
-    if (!text || loading) return;
+  const doSend = useCallback(
+    async (text: string) => {
+      if (!text || loading) return;
 
-    const userMsg: ChatMessage = { role: 'user', text };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setLoading(true);
+      const userMsg: ChatMsgUI = { id: `msg-${++msgCounter}`, role: 'user', text };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput('');
+      setLoading(true);
 
-    try {
-      const history: ChatMessage[] = messages.map((m) => ({ role: m.role, text: m.text }));
-      const result: ChatResponse = await fetchSignalChat(signalId, text, history, provider);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'model', text: result.reply, citations: result.citations },
-      ]);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'model', text: `Error: ${err instanceof Error ? err.message : 'Failed to get response'}` },
-      ]);
-    } finally {
-      setLoading(false);
-      setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 50);
-    }
-  }, [loading, messages, signalId, provider]);
+      try {
+        const history: ChatMessage[] = messages.map((m) => ({ role: m.role, text: m.text }));
+        const result: ChatResponse = await fetchSignalChat(signalId, text, history, provider);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `msg-${++msgCounter}`,
+            role: 'model',
+            text: result.reply,
+            citations: result.citations,
+          },
+        ]);
+      } catch (err) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `msg-${++msgCounter}`,
+            role: 'model',
+            text: `Error: ${err instanceof Error ? err.message : 'Failed to get response'}`,
+          },
+        ]);
+      } finally {
+        setLoading(false);
+        setTimeout(
+          () =>
+            scrollRef.current?.scrollTo({
+              top: scrollRef.current.scrollHeight,
+              behavior: 'smooth',
+            }),
+          50,
+        );
+      }
+    },
+    [loading, messages, signalId, provider],
+  );
 
   const sendMessage = useCallback(() => {
     const text = input.trim();
@@ -107,22 +133,19 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
             </div>
           </div>
         )}
-        {messages.map((msg, i) => (
-          <div
-            key={`${msg.role}-${i}`}
-            className={`signal-chat__msg signal-chat__msg--${msg.role}`}
-          >
+        {messages.map((msg) => (
+          <div key={msg.id} className={`signal-chat__msg signal-chat__msg--${msg.role}`}>
             <div className="signal-chat__msg-content">
-              {msg.text.split('\n').map((line, j) => (
-                <p key={`${i}-${j}`}>{line}</p>
+              {msg.text.split('\n').map((line) => (
+                <p key={line}>{line}</p>
               ))}
             </div>
             {msg.citations && msg.citations.length > 0 && (
               <div className="signal-chat__citations">
                 <span className="signal-chat__citations-label">Sources:</span>
-                {msg.citations.map((c, ci) => (
+                {msg.citations.map((c) => (
                   <a
-                    key={ci}
+                    key={c}
                     href={c}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -138,7 +161,9 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
         {loading && (
           <div className="signal-chat__msg signal-chat__msg--model signal-chat__msg--loading">
             <div className="signal-chat__typing">
-              <span /><span /><span />
+              <span />
+              <span />
+              <span />
             </div>
           </div>
         )}
@@ -161,8 +186,14 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
           disabled={loading || !input.trim()}
           aria-label="Send"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M14.5 1.5L7 9M14.5 1.5L10 14.5L7 9M14.5 1.5L1.5 6L7 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M14.5 1.5L7 9M14.5 1.5L10 14.5L7 9M14.5 1.5L1.5 6L7 9"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
       </div>

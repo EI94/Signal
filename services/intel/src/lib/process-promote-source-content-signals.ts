@@ -31,7 +31,12 @@ export type PromoteProcessDeps = {
     publishedAt?: Date | null;
   }) => Promise<void>;
   updatePromotionStatus: typeof updateSourceContentPromotionStatus;
-  resolveSourceMetadata: (sourceContentId: string) => Promise<{ sourceUrl: string; sourceId: string; publishedAt: Date | null; normalizedGcsUri: string | null } | null>;
+  resolveSourceMetadata: (sourceContentId: string) => Promise<{
+    sourceUrl: string;
+    sourceId: string;
+    publishedAt: Date | null;
+    normalizedGcsUri: string | null;
+  } | null>;
   lookupSourceLabel: (sourceId: string) => Promise<string | null>;
 };
 
@@ -164,7 +169,11 @@ export async function processPromoteSourceContentSignals(
               }
             }
           } catch (err) {
-            console.warn('[promote] Gemini enrichment failed for signal %s:', bundle.signalRow.signal_id, err);
+            console.warn(
+              '[promote] Gemini enrichment failed for signal %s:',
+              bundle.signalRow.signal_id,
+              err,
+            );
           }
         }
         console.info('[promote] Gemini enriched %d/%d bundles', geminiCallCount, bundles.length);

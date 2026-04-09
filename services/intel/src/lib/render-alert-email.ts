@@ -46,18 +46,16 @@ export function buildAlertEmailHtml(params: {
   const scoreColor = score >= 70 ? '#b91c1c' : score >= 50 ? '#92400e' : '#475569';
   const scoreBorder = score >= 70 ? '#fecaca' : score >= 50 ? '#fde68a' : '#e2e8f0';
 
-  const summaryBlock =
-    shortSummary && shortSummary.trim()
-      ? `<tr>
+  const summaryBlock = shortSummary?.trim()
+    ? `<tr>
 <td style="padding:0 32px 24px;">
 <p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">${escapeHtml(shortSummary.trim())}</p>
 </td>
 </tr>`
-      : '';
+    : '';
 
-  const matchReasonBlock =
-    matchReason && matchReason.trim()
-      ? `<tr>
+  const matchReasonBlock = matchReason?.trim()
+    ? `<tr>
 <td style="padding:0 32px 20px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:6px;">
 <tr>
@@ -68,14 +66,13 @@ Matched by: <strong style="color:#334155;">${escapeHtml(matchReason.trim())}</st
 </table>
 </td>
 </tr>`
-      : '';
+    : '';
 
-  const sourceBlock =
-    sourceUrl && sourceUrl.startsWith('http')
-      ? `<td style="padding-right:20px;">
+  const sourceBlock = sourceUrl?.startsWith('http')
+    ? `<td style="padding-right:20px;">
 <a href="${escapeHtml(sourceUrl)}" style="display:inline-block;color:#475569;font-size:13px;font-weight:500;text-decoration:underline;">Read original source&nbsp;↗</a>
 </td>`
-      : '';
+    : '';
 
   const bodyHtml = `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -162,7 +159,7 @@ export function buildAlertEmailPlainText(params: {
     '',
   ];
 
-  if (params.shortSummary && params.shortSummary.trim()) {
+  if (params.shortSummary?.trim()) {
     lines.push(params.shortSummary.trim(), '');
   }
 

@@ -5,7 +5,7 @@ import { getCountryNameByIso2 } from '@signal/contracts';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { type SignalEnrichment, fetchSignalEnrichment } from '../../lib/api/fetch-signal-enrich';
+import { fetchSignalEnrichment, type SignalEnrichment } from '../../lib/api/fetch-signal-enrich';
 import { entityPath } from '../../lib/entity-route';
 import { formatCompactDate } from '../../lib/signal-display';
 import { SignalChat } from './signal-chat';
@@ -77,11 +77,16 @@ export function SignalDrawer({
       .finally(() => {
         if (!cancelled) setEnrichLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [signal.signalId]);
 
   const handleWatch = useCallback(() => {
-    if (watchState === 'error') { resetWatch(); return; }
+    if (watchState === 'error') {
+      resetWatch();
+      return;
+    }
     if (watchState !== 'idle' || !primaryEntity) return;
     watchEntity({
       entityType: primaryEntity.entityType,
@@ -103,13 +108,21 @@ export function SignalDrawer({
             {typeLabel}
           </span>
           {signal.compositeScore != null && (
-            <span className="signal-drawer__score-badge">
-              {signal.compositeScore}
-            </span>
+            <span className="signal-drawer__score-badge">{signal.compositeScore}</span>
           )}
-          <button type="button" className="signal-drawer__close" onClick={onClose} aria-label="Close">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          <button
+            type="button"
+            className="signal-drawer__close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path
+                d="M4.5 4.5L13.5 13.5M13.5 4.5L4.5 13.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
@@ -131,8 +144,21 @@ export function SignalDrawer({
             rel="noopener noreferrer"
             className="signal-drawer__source-link"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M5.5 2.5H3.5C2.948 2.5 2.5 2.948 2.5 3.5V10.5C2.5 11.052 2.948 11.5 3.5 11.5H10.5C11.052 11.5 11.5 11.052 11.5 10.5V8.5M8.5 2.5H11.5V5.5M11.5 2.5L6 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              aria-hidden="true"
+              style={{ flexShrink: 0 }}
+            >
+              <path
+                d="M5.5 2.5H3.5C2.948 2.5 2.5 2.948 2.5 3.5V10.5C2.5 11.052 2.948 11.5 3.5 11.5H10.5C11.052 11.5 11.5 11.052 11.5 10.5V8.5M8.5 2.5H11.5V5.5M11.5 2.5L6 8"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             <span className="signal-drawer__source-name">
               {sourceLabel ?? new URL(sourceUrl).hostname}
@@ -140,9 +166,7 @@ export function SignalDrawer({
             <span className="signal-drawer__source-action">Read source</span>
           </a>
         ) : (
-          <span className="signal-drawer__source-unavailable">
-            Source not yet available
-          </span>
+          <span className="signal-drawer__source-unavailable">Source not yet available</span>
         )}
       </div>
 
@@ -219,7 +243,10 @@ export function SignalDrawer({
                 <h3 className="signal-drawer__section-title">Entities</h3>
                 <div className="signal-drawer__entity-list">
                   {signal.primaryEntityRefs.map((ref) => (
-                    <div key={`${ref.entityType}:${ref.entityId}`} className="signal-drawer__entity-item">
+                    <div
+                      key={`${ref.entityType}:${ref.entityId}`}
+                      className="signal-drawer__entity-item"
+                    >
                       <Link
                         href={entityPath(ref.entityType, ref.entityId)}
                         className="signal-drawer__entity-name"
@@ -253,11 +280,16 @@ export function SignalDrawer({
                       className="signal-drawer__related-card"
                       onClick={() => onSelectRelated(s)}
                     >
-                      <span className="signal-drawer__related-type" style={{ color: TYPE_COLORS[s.signalType] ?? '#6b7280' }}>
+                      <span
+                        className="signal-drawer__related-type"
+                        style={{ color: TYPE_COLORS[s.signalType] ?? '#6b7280' }}
+                      >
                         {TYPE_LABELS[s.signalType] ?? s.signalType}
                       </span>
                       <span className="signal-drawer__related-title">{s.title}</span>
-                      <span className="signal-drawer__related-time">{formatCompactDate(s.detectedAt)}</span>
+                      <span className="signal-drawer__related-time">
+                        {formatCompactDate(s.detectedAt)}
+                      </span>
                     </button>
                   ))}
                 </div>

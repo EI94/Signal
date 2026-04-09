@@ -139,31 +139,35 @@ async function main() {
     for (const s of SOURCES) {
       const sourceId = sourceIdFromUrl(s.canonicalUrl);
       const ref = db.collection('sources').doc(sourceId);
-      batch.set(ref, {
-        sourceId,
-        name: s.name,
-        canonicalUrl: s.canonicalUrl,
-        sourceType: s.sourceType,
-        category: s.category,
-        isActive: true,
-        authorityScore: s.authorityScore,
-        priorityTier: s.priorityTier,
-        fetchStrategy: {
-          fetchMethodHint: 'html',
-          checkFrequencyBucket: s.checkFrequencyBucket,
-          etagSupport: 'unknown',
-          authRequired: false,
+      batch.set(
+        ref,
+        {
+          sourceId,
+          name: s.name,
+          canonicalUrl: s.canonicalUrl,
+          sourceType: s.sourceType,
+          category: s.category,
+          isActive: true,
+          authorityScore: s.authorityScore,
+          priorityTier: s.priorityTier,
+          fetchStrategy: {
+            fetchMethodHint: 'html',
+            checkFrequencyBucket: s.checkFrequencyBucket,
+            etagSupport: 'unknown',
+            authRequired: false,
+          },
+          parserStrategy: {
+            parserStrategyKey: 'html_generic',
+            contentLanguageHint: 'en',
+            expectedContentKind: 'web_html',
+          },
+          linkedEntityRefs: [],
+          createdAt: now,
+          updatedAt: now,
+          createdBy: 'seed:market-expansion-v1',
         },
-        parserStrategy: {
-          parserStrategyKey: 'html_generic',
-          contentLanguageHint: 'en',
-          expectedContentKind: 'web_html',
-        },
-        linkedEntityRefs: [],
-        createdAt: now,
-        updatedAt: now,
-        createdBy: 'seed:market-expansion-v1',
-      }, { merge: true });
+        { merge: true },
+      );
       console.log(`  SET sources/${sourceId} — ${s.name}`);
     }
     await batch.commit();

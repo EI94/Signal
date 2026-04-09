@@ -238,7 +238,10 @@ export function WorldMap({
                   className="world-map__dot-pulse"
                 />
               )}
+              {/* biome-ignore lint/a11y/useSemanticElements: SVG circle cannot be a semantic button */}
               <circle
+                role="button"
+                tabIndex={-1}
                 cx={dot.x}
                 cy={dot.y}
                 r={r}
@@ -292,12 +295,13 @@ export function WorldMap({
                     color: SIGNAL_TYPE_DOT[hoveredDotData.dominantType]?.color ?? '#4a9aba',
                   }}
                 >
-                  {SIGNAL_TYPE_DOT[hoveredDotData.dominantType]?.label ?? hoveredDotData.dominantType}
+                  {SIGNAL_TYPE_DOT[hoveredDotData.dominantType]?.label ??
+                    hoveredDotData.dominantType}
                 </span>
               </div>
               <span className="world-map__tooltip-count">
-                {hoveredDotData.count} signal{hoveredDotData.count !== 1 ? 's' : ''} &middot;
-                Score {hoveredDotData.topScore}
+                {hoveredDotData.count} signal{hoveredDotData.count !== 1 ? 's' : ''} &middot; Score{' '}
+                {hoveredDotData.topScore}
               </span>
               <span className="world-map__tooltip-signal">{hoveredDotData.topTitle}</span>
             </>
