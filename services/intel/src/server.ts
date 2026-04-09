@@ -625,6 +625,20 @@ async function start() {
       if (config.toolIngestRunOnceSecret) {
         headers['x-signal-ingest-secret'] = config.toolIngestRunOnceSecret;
       }
+      if (process.env.K_SERVICE) {
+        try {
+          const metaUrl = `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=${encodeURIComponent(config.toolIngestBaseUrl)}`;
+          const metaResp = await fetch(metaUrl, {
+            headers: { 'Metadata-Flavor': 'Google' },
+            signal: AbortSignal.timeout(5_000),
+          });
+          if (metaResp.ok) {
+            headers['Authorization'] = `Bearer ${await metaResp.text()}`;
+          }
+        } catch {
+          request.log.warn('Failed to get IAM token for ingest callout');
+        }
+      }
       const resp = await fetch(`${config.toolIngestBaseUrl}/internal/run-once`, {
         method: 'POST',
         headers,

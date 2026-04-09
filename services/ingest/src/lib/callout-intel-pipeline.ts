@@ -4,6 +4,21 @@ import type { PersistRequestPayload } from './process-one-source';
 
 export type PipelineCalloutResult = 'called' | 'call_failed' | 'call_skipped';
 
+async function getCloudRunIdToken(audience: string): Promise<string | null> {
+  if (!process.env.K_SERVICE) return null;
+  try {
+    const url = `http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=${encodeURIComponent(audience)}`;
+    const resp = await fetch(url, {
+      headers: { 'Metadata-Flavor': 'Google' },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!resp.ok) return null;
+    return await resp.text();
+  } catch {
+    return null;
+  }
+}
+
 export async function calloutIntelPipeline(
   config: IngestRuntimeConfig,
   archived: ArchivePersistenceResult,
@@ -17,6 +32,11 @@ export async function calloutIntelPipeline(
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (config.intelSecret) {
     headers['x-signal-intel-secret'] = config.intelSecret;
+  }
+
+  const idToken = await getCloudRunIdToken(config.intelBaseUrl);
+  if (idToken) {
+    headers['Authorization'] = `Bearer ${idToken}`;
   }
 
   const body = JSON.stringify({

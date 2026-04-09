@@ -90,33 +90,29 @@ export const signalIntelligenceV1Routes: FastifyPluginAsync<{
     },
   );
 
-  app.post(
-    '/pulse/live-refresh',
-    { preHandler: [...prePublicRead] },
-    async (_request, reply) => {
-      if (!config.toolIntelBaseUrl) {
-        return reply.code(503).send({ ok: false, error: 'intel_service_unavailable' });
-      }
+  app.post('/pulse/live-refresh', async (_request, reply) => {
+    if (!config.toolIntelBaseUrl) {
+      return reply.code(503).send({ ok: false, error: 'intel_service_unavailable' });
+    }
 
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (config.toolIntelSecret) {
-        headers['x-signal-intel-secret'] = config.toolIntelSecret;
-      }
-      const lrAuthz = await getCloudRunAuthorizationHeader(config.toolIntelBaseUrl);
-      if (lrAuthz) headers['Authorization'] = lrAuthz;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (config.toolIntelSecret) {
+      headers['x-signal-intel-secret'] = config.toolIntelSecret;
+    }
+    const lrAuthz = await getCloudRunAuthorizationHeader(config.toolIntelBaseUrl);
+    if (lrAuthz) headers['Authorization'] = lrAuthz;
 
-      try {
-        const resp = await fetch(`${config.toolIntelBaseUrl}/internal/trigger-ingest`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({}),
-          signal: AbortSignal.timeout(10_000),
-        });
-        const json = await resp.json().catch(() => ({}));
-        return reply.send({ ok: true, triggered: true, detail: json });
-      } catch {
-        return reply.send({ ok: true, triggered: false, message: 'ingest_trigger_best_effort' });
-      }
-    },
-  );
+    try {
+      const resp = await fetch(`${config.toolIntelBaseUrl}/internal/trigger-ingest`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(10_000),
+      });
+      const json = await resp.json().catch(() => ({}));
+      return reply.send({ ok: true, triggered: true, detail: json });
+    } catch {
+      return reply.send({ ok: true, triggered: false, message: 'ingest_trigger_best_effort' });
+    }
+  });
 };

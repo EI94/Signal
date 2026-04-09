@@ -8,6 +8,7 @@ export async function triggerLiveRefresh(): Promise<boolean> {
     const res = await fetch(`${apiBase}/v1/pulse/live-refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: '{}',
     });
     return res.ok;
   } catch {
