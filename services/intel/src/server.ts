@@ -516,6 +516,13 @@ async function start() {
             : undefined,
           normalizedGcsUri:
             typeof body?.normalizedGcsUri === 'string' ? body.normalizedGcsUri : undefined,
+          archivedGcsUri:
+            typeof body?.archivedGcsUri === 'string' ? body.archivedGcsUri : undefined,
+          manifestGcsUri:
+            typeof body?.manifestGcsUri === 'string' ? body.manifestGcsUri : undefined,
+          sourceType: typeof body?.sourceType === 'string' ? body.sourceType : undefined,
+          mimeType: typeof body?.mimeType === 'string' ? body.mimeType : undefined,
+          sourceId: typeof body?.sourceId === 'string' ? body.sourceId : undefined,
         },
         config,
       );
