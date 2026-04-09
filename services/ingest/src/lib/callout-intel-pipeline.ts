@@ -48,6 +48,11 @@ export async function calloutIntelPipeline(
     sourceCategory: persist.source.category ?? null,
     linkedEntityRefs: persist.source.linkedEntityRefs ?? [],
     workspaceId: config.defaultWorkspaceId,
+    archivedGcsUri: archived.archivedGcsUri,
+    manifestGcsUri: archived.manifestGcsUri,
+    sourceType: persist.source.sourceType,
+    mimeType: persist.contentType?.trim() || null,
+    sourceId: persist.source.sourceId,
   });
 
   try {

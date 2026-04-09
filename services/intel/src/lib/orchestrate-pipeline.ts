@@ -12,6 +12,11 @@ export type OrchestratePipelineRequest = {
   sourceCategory?: string;
   linkedEntityRefs?: Array<{ entityType: string; entityId: string; displayName?: string }>;
   normalizedGcsUri?: string;
+  archivedGcsUri?: string;
+  manifestGcsUri?: string;
+  sourceType?: string;
+  mimeType?: string;
+  sourceId?: string;
 };
 
 export type OrchestratePipelineResult = {
@@ -90,20 +95,43 @@ export async function orchestratePipeline(
 
   // --- Step 2: Normalize (source-content-persisted) ---
   if (!normalizedGcsUri) {
+    if (!body.archivedGcsUri || !body.manifestGcsUri) {
+      result.steps.normalize = {
+        status: 'error',
+        detail: 'missing archivedGcsUri/manifestGcsUri — cannot normalize without archive data',
+      };
+      console.error(
+        '[orchestrate] normalize skipped for %s: no archivedGcsUri/manifestGcsUri provided and no normalizedGcsUri in BigQuery',
+        body.sourceContentId,
+      );
+      result.ok = false;
+      return result;
+    }
+
     try {
       const { createDefaultProcessDeps, processSourceContentPersisted } = await import(
         './process-source-content-persisted'
       );
       const deps = createDefaultProcessDeps(config);
-      const normalizeResult = await processSourceContentPersisted(
-        {
-          sourceContentId: body.sourceContentId,
-          observedAt,
-          workspaceId: workspaceId ?? null,
-        } as unknown as SourceContentPersistedEvent,
-        config,
-        deps,
-      );
+      const normalizeEvent: SourceContentPersistedEvent = {
+        eventType: 'source_content.persisted',
+        eventVersion: 'v1',
+        sourceContentId: body.sourceContentId,
+        sourceId: sourceId ?? body.sourceId ?? body.sourceContentId,
+        registrySourceType: 'web_page',
+        sourceType: body.sourceType ?? 'web_page',
+        sourceUrl: sourceUrl ?? '',
+        observedAt,
+        archivedGcsUri: body.archivedGcsUri,
+        manifestGcsUri: body.manifestGcsUri,
+        contentHash: 'orchestrate-callout',
+        mimeType: body.mimeType ?? null,
+        language: null,
+        workspaceId: workspaceId ?? null,
+        publishedAt: publishedAt ?? null,
+        emittedAt: new Date().toISOString(),
+      };
+      const normalizeResult = await processSourceContentPersisted(normalizeEvent, config, deps);
       if ('normalizedGcsUri' in normalizeResult && normalizeResult.normalizedGcsUri) {
         normalizedGcsUri = normalizeResult.normalizedGcsUri as string;
       }
@@ -135,7 +163,7 @@ export async function orchestratePipeline(
     const extractResult = await processExtractSourceContent(
       {
         sourceContentId: body.sourceContentId,
-        sourceId: sourceId ?? body.sourceContentId,
+        sourceId: sourceId ?? body.sourceId ?? body.sourceContentId,
         normalizedGcsUri,
         observedAt,
         publishedAt: publishedAt ?? null,
