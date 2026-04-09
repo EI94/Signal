@@ -3,6 +3,13 @@
 import type { SignalSummaryV1 } from '@signal/contracts';
 import { getCountryNameByIso2 } from '@signal/contracts';
 import { formatCompactDate } from '../../lib/signal-display';
+import { COUNTRY_PATHS } from '../../lib/world-map-paths';
+
+function countryDisplayName(iso2: string): string {
+  const fromMap = COUNTRY_PATHS.find((c) => c.iso2 === iso2)?.name;
+  if (fromMap) return fromMap;
+  return getCountryNameByIso2(iso2) ?? iso2;
+}
 
 type SignalRailProps = {
   signals: SignalSummaryV1[];
@@ -118,16 +125,26 @@ function SignalCard({ signal, onClick }: { signal: SignalSummaryV1; onClick: () 
 }
 
 export function SignalRail({ signals, onSignalClick, selectedCountry }: SignalRailProps) {
-  const countryName = selectedCountry ? getCountryNameByIso2(selectedCountry) : null;
+  const countryName = selectedCountry ? countryDisplayName(selectedCountry) : null;
   const groups = groupSignals(signals);
+
+  const title = countryName
+    ? `What changed in ${countryName}`
+    : 'What changed — worldwide';
+
+  const countLabel = countryName
+    ? `${signals.length} signal${signals.length !== 1 ? 's' : ''} · ${countryName}`
+    : `${signals.length} signal${signals.length !== 1 ? 's' : ''} · worldwide`;
+
+  const emptyMessage = countryName
+    ? `No signals for ${countryName} in this time window. Select another country or widen the range above.`
+    : 'No signals in this time window. Try a longer range (e.g. 7d) or check back shortly.';
 
   return (
     <aside className="signal-rail" aria-label="Intelligence feed">
       <div className="signal-rail__header">
-        <h2 className="signal-rail__title">
-          {countryName ? `${countryName} — What Changed` : 'What Changed'}
-        </h2>
-        <span className="signal-rail__count">{signals.length} signals</span>
+        <h2 className="signal-rail__title">{title}</h2>
+        <span className="signal-rail__count">{countLabel}</span>
       </div>
       <div className="signal-rail__sections">
         {groups.map((group) => (
@@ -142,9 +159,7 @@ export function SignalRail({ signals, onSignalClick, selectedCountry }: SignalRa
             ))}
           </section>
         ))}
-        {groups.length === 0 && (
-          <div className="signal-rail__empty">No signals in this time window</div>
-        )}
+        {groups.length === 0 && <div className="signal-rail__empty">{emptyMessage}</div>}
       </div>
     </aside>
   );
