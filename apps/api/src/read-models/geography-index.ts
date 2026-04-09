@@ -62,7 +62,7 @@ const ORG_HQ_MAP: Record<string, string> = {
   shell: 'GB',
   bp: 'GB',
   eni: 'IT',
-  'petronas': 'MY',
+  petronas: 'MY',
 };
 
 function escapeRegex(s: string): string {
