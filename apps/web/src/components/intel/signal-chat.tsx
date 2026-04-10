@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import Markdown from 'react-markdown';
 import {
   type ChatMessage,
   type ChatResponse,
@@ -49,7 +50,7 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
           {
             id: `msg-${++msgCounter}`,
             role: 'model',
-            text: `Error: ${err instanceof Error ? err.message : 'Failed to get response'}`,
+            text: `**Error:** ${err instanceof Error ? err.message : 'Failed to get response.'}  \nPlease try again.`,
           },
         ]);
       } finally {
@@ -84,9 +85,9 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
 
   const suggestions = [
     'What are the strategic implications?',
-    'Who are the key stakeholders?',
-    'What are the risks?',
-    'How does this compare to competitors?',
+    'Who benefits and who is at risk?',
+    'What is the likely timeline and next steps?',
+    'How does this compare to recent industry trends?',
   ];
 
   return (
@@ -98,7 +99,7 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
             type="button"
             className={`signal-chat__provider-btn ${provider === 'perplexity' ? 'signal-chat__provider-btn--active' : ''}`}
             onClick={() => setProvider('perplexity')}
-            title="Perplexity — includes live web search"
+            title="Web Search — includes live web sources and citations"
           >
             Web Search
           </button>
@@ -106,9 +107,9 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
             type="button"
             className={`signal-chat__provider-btn ${provider === 'gemini' ? 'signal-chat__provider-btn--active' : ''}`}
             onClick={() => setProvider('gemini')}
-            title="Gemini — deep analysis"
+            title="Deep Analysis — detailed reasoning from source documents"
           >
-            Analysis
+            Deep Analysis
           </button>
         </div>
       </div>
@@ -135,10 +136,8 @@ export function SignalChat({ signalId, signalTitle }: SignalChatProps) {
         )}
         {messages.map((msg) => (
           <div key={msg.id} className={`signal-chat__msg signal-chat__msg--${msg.role}`}>
-            <div className="signal-chat__msg-content">
-              {msg.text.split('\n').map((line) => (
-                <p key={line}>{line}</p>
-              ))}
+            <div className="signal-chat__msg-content signal-chat__markdown">
+              {msg.role === 'model' ? <Markdown>{msg.text}</Markdown> : <p>{msg.text}</p>}
             </div>
             {msg.citations && msg.citations.length > 0 && (
               <div className="signal-chat__citations">

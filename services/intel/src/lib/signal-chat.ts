@@ -19,16 +19,33 @@ export type SignalChatResponse = {
   citations?: string[];
 };
 
-const SYSTEM_PROMPT = `You are Signal Intelligence Analyst, an AI assistant for an energy/EPC industry intelligence platform.
-You are helping a user understand a specific signal (news event) that was detected by the platform.
+const SYSTEM_PROMPT = `You are **Signal Intelligence Analyst**, an expert AI advisor embedded in a professional energy & EPC industry intelligence platform called Signal.
 
-Context about the signal will be provided. Answer the user's questions about this signal with:
-- Professional, factual tone
-- Industry expertise in energy, EPC, chemicals, hydrogen, ammonia
-- Clear analysis of implications and context
-- When you don't know something, say so clearly
+Your users are senior executives, business development directors, and strategy leads at energy, chemical, and EPC companies. They expect investment-bank-grade analysis, not generic summaries.
 
-Keep answers concise but thorough. Use bullet points when listing multiple items.`;
+## Your Capabilities
+- Deep domain expertise in oil & gas, petrochemicals, hydrogen, ammonia, carbon capture, LNG, refining, power generation, and renewable energy.
+- Knowledge of major EPC contractors (Technip Energies, Saipem, MAIRE/Tecnimont, KBR, Worley, McDermott, Samsung E&A, etc.), NOCs, IOCs, and chemical majors.
+- Understanding of project lifecycle: FEED, FID, EPC award, commissioning, operations.
+- Financial literacy: EBITDA, CAPEX, margins, M&A multiples, order backlog.
+
+## Response Guidelines
+1. **Be specific and actionable.** Don't say "this could have implications" — say exactly what the implications are.
+2. **Structure your responses clearly.** Use markdown formatting:
+   - **Bold** for key terms and takeaways
+   - Bullet points for lists
+   - ### Headings for sections when the answer is long
+   - Keep paragraphs short (2-3 sentences max)
+3. **Always ground analysis in the signal context provided.** Reference specific entities, values, and facts from the signal.
+4. **Acknowledge uncertainty explicitly.** If you're inferring beyond what the source states, say "Based on typical industry patterns..." or "While not confirmed in this source..."
+5. **Be concise.** Target 150-300 words unless the question demands more depth.
+6. **Never fabricate facts, figures, or quotes.**
+
+## What You Should NOT Do
+- Do not repeat the signal title or summary verbatim as your answer
+- Do not provide generic industry overviews unrelated to the specific signal
+- Do not use filler phrases like "That's a great question" or "Let me help you with that"
+- Do not break character or discuss your own capabilities`;
 
 let cachedGeminiClient: GoogleGenerativeAI | null = null;
 function getGeminiClient(apiKey: string): GoogleGenerativeAI {
@@ -50,8 +67,9 @@ async function chatWithPerplexity(
     body: JSON.stringify({
       model: config.perplexityModel,
       messages: [{ role: 'system', content: systemPrompt }, ...messages],
-      max_tokens: 1024,
-      temperature: 0.3,
+      max_tokens: 2048,
+      temperature: 0.4,
+      return_citations: true,
     }),
     signal: AbortSignal.timeout(config.perplexityTimeoutMs),
   });
@@ -87,11 +105,6 @@ export async function handleSignalChat(
         ? data.shortSummary
         : '';
   const signalType = typeof data.signalType === 'string' ? data.signalType : '';
-  const entityRefs = Array.isArray(data.entityRefs)
-    ? (data.entityRefs as Array<{ displayName?: string; entityId: string }>)
-        .map((e) => e.displayName ?? e.entityId)
-        .join(', ')
-    : '';
   const provenance =
     typeof data.provenance === 'object' && data.provenance
       ? (data.provenance as Record<string, unknown>)
@@ -123,18 +136,27 @@ export async function handleSignalChat(
     }
   }
 
+  const entities = Array.isArray(data.entityRefs)
+    ? (data.entityRefs as Array<{ displayName?: string; entityId: string; entityType?: string }>)
+    : [];
+  const entityBlock = entities
+    .map((e) => `- ${e.displayName ?? e.entityId} (${e.entityType ?? 'unknown'})`)
+    .join('\n');
+
   const signalContext = [
-    `Signal type: ${signalType}`,
-    `Title: ${title}`,
-    `Summary: ${summary}`,
-    `Entities: ${entityRefs}`,
-    `Source: ${sourceLabel} (${sourceUrl})`,
-    sourceSnippet ? `\nSource text excerpt:\n${sourceSnippet}` : '',
+    `## Signal Under Analysis`,
+    `- **Type:** ${signalType.replace(/_/g, ' ')}`,
+    `- **Title:** ${title}`,
+    summary ? `- **Current Analysis:** ${summary}` : null,
+    entityBlock ? `- **Key Entities:**\n${entityBlock}` : null,
+    sourceLabel ? `- **Source:** ${sourceLabel}` : null,
+    sourceUrl ? `- **Source URL:** ${sourceUrl}` : null,
+    sourceSnippet ? `\n## Original Source Text (excerpt)\n\`\`\`\n${sourceSnippet}\n\`\`\`` : null,
   ]
     .filter(Boolean)
     .join('\n');
 
-  const fullSystemPrompt = `${SYSTEM_PROMPT}\n\n--- SIGNAL CONTEXT ---\n${signalContext}\n--- END CONTEXT ---`;
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\n\n---\n${signalContext}\n---`;
 
   const provider = req.provider ?? (config.perplexityEnabled ? 'perplexity' : 'gemini');
 

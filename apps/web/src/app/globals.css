@@ -3991,10 +3991,65 @@ code {
   border-bottom-left-radius: 4px;
 }
 .signal-chat__msg-content p {
-  margin: 0 0 4px;
+  margin: 0 0 8px;
+  line-height: 1.55;
 }
 .signal-chat__msg-content p:last-child {
   margin-bottom: 0;
+}
+
+/* Markdown rendering in chat */
+.signal-chat__markdown h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 12px 0 6px;
+  color: var(--sg-text);
+}
+.signal-chat__markdown h3:first-child {
+  margin-top: 0;
+}
+.signal-chat__markdown strong {
+  font-weight: 600;
+  color: var(--sg-text);
+}
+.signal-chat__markdown ul,
+.signal-chat__markdown ol {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+}
+.signal-chat__markdown li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+.signal-chat__markdown li p {
+  margin: 0;
+}
+.signal-chat__markdown code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+.signal-chat__markdown pre {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+  font-size: 0.75rem;
+}
+.signal-chat__markdown blockquote {
+  border-left: 3px solid var(--sg-accent, #60a5fa);
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: var(--sg-text-muted);
+}
+.signal-chat__markdown a {
+  color: var(--sg-accent, #60a5fa);
+  text-decoration: none;
+}
+.signal-chat__markdown a:hover {
+  text-decoration: underline;
 }
 
 .signal-chat__citations {
