@@ -40,7 +40,16 @@ export function humanTime(isoOrDate: string | Date): string {
   });
 }
 
-const PRODUCT_URL = 'https://signal-tau-plum.vercel.app';
+/** Production web app (links in emails). Override with SIGNAL_EMAIL_PRODUCT_URL for staging. */
+export const PRODUCT_URL =
+  process.env.SIGNAL_EMAIL_PRODUCT_URL?.trim() || 'https://www.signalfromtheworld.com';
+
+/** Logo shown in email header (HTTPS, absolute). Prefer PNG/SVG hosted on your domain. */
+function emailBrandLogoUrl(): string {
+  const raw = process.env.SIGNAL_EMAIL_LOGO_URL?.trim();
+  if (raw) return raw;
+  return `${PRODUCT_URL.replace(/\/$/, '')}/email/signal-mark.svg`;
+}
 
 export function emailLayout(params: {
   preheader: string;
@@ -48,6 +57,7 @@ export function emailLayout(params: {
   footerExtra?: string;
 }): string {
   const { preheader, bodyHtml, footerExtra } = params;
+  const logoUrl = emailBrandLogoUrl();
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -74,13 +84,18 @@ a:hover{text-decoration:underline}
 <!-- Container -->
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
 
-<!-- Header -->
+<!-- Header: brand mark + wordmark (reassuring visual identity in all mail clients) -->
 <tr>
-<td style="background:#0f172a;padding:24px 32px;">
+<td style="background:#0f172a;padding:22px 32px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
-<td style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">Signal</td>
-<td align="right" style="font-size:12px;color:#94a3b8;letter-spacing:0.3px;">from the world</td>
+<td width="52" valign="middle" style="padding:0 16px 0 0;">
+<img src="${escapeHtml(logoUrl)}" width="40" height="40" alt="Signal" style="display:block;border:0;border-radius:8px;width:40px;height:40px;"/>
+</td>
+<td valign="middle">
+<div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.4px;line-height:1.2;">Signal</div>
+<div style="font-size:12px;color:#94a3b8;letter-spacing:0.25px;margin-top:4px;">Intelligence from the world</div>
+</td>
 </tr>
 </table>
 </td>
@@ -122,5 +137,3 @@ You received this email because you are subscribed to Signal alerts.
 </body>
 </html>`;
 }
-
-export { PRODUCT_URL };

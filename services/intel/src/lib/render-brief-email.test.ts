@@ -59,7 +59,8 @@ describe('render brief email', () => {
       periodEndIso: '2026-04-08T23:59:59.999Z',
       signals: [makeSignal()],
     });
-    expect(html).toContain('signal-tau-plum.vercel.app');
+    expect(html).toContain('signalfromtheworld.com');
+    expect(html).toContain('email/signal-mark.svg');
     expect(html).toContain('Read on Signal');
   });
 
