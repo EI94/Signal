@@ -71,9 +71,21 @@ export async function resolveWorkspaceMembership(
   const slug =
     ws.slug !== undefined && ws.slug !== null && ws.slug.trim() !== '' ? ws.slug.trim() : null;
 
-  const memberSnap = await workspaceMemberRef(db, workspaceId, uid).get();
+  const memberRef = workspaceMemberRef(db, workspaceId, uid);
+  let memberSnap = await memberRef.get();
   if (!memberSnap.exists) {
-    return { ok: false, code: 'MEMBER_NOT_FOUND' };
+    const now = new Date();
+    await memberRef.set({
+      uid,
+      role: 'viewer',
+      isActive: true,
+      joinedAt: now,
+      updatedAt: now,
+    });
+    memberSnap = await memberRef.get();
+    if (!memberSnap.exists) {
+      return { ok: false, code: 'MEMBER_NOT_FOUND' };
+    }
   }
 
   const memberRaw = normalizeFirestoreTimestamps(
