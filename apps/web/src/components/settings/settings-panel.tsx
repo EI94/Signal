@@ -135,7 +135,11 @@ export function SettingsPanel() {
     setTestAlertMsg(null);
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${apiBase}/v1/me/test-alert`, { method: 'POST', headers });
+      const res = await fetch(`${apiBase}/v1/me/test-alert`, {
+        method: 'POST',
+        headers,
+        body: '{}',
+      });
       const body = (await res.json()) as { status?: string; message?: string };
       setTestAlertMsg(
         body.status === 'sent' ? `Test alert sent to ${user.email}` : (body.message ?? 'Failed'),
@@ -153,7 +157,11 @@ export function SettingsPanel() {
     setTestDigestMsg(null);
     try {
       const headers = await authHeaders();
-      const res = await fetch(`${apiBase}/v1/me/test-digest`, { method: 'POST', headers });
+      const res = await fetch(`${apiBase}/v1/me/test-digest`, {
+        method: 'POST',
+        headers,
+        body: '{}',
+      });
       const body = (await res.json()) as { status?: string; message?: string };
       setTestDigestMsg(
         body.status === 'sent' ? `Digest sent to ${user.email}` : (body.message ?? 'Failed'),
