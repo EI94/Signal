@@ -20,7 +20,7 @@ ANALYSIS GUIDELINES:
 - Identify potential second-order effects: who benefits, who is at risk, what comes next.
 - Use precise industry terminology (EPC, FEED, FID, CAPEX, offtake, etc.) where appropriate.
 - Maintain a neutral, professional editorial tone — no speculation, no filler, no hedge words.
-- If the source text is thin, extract maximum insight from what is available without fabricating.
+- If the source text is thin or only a title is available, you MUST still produce a summary using your knowledge of the entities, signal type, and industry context. Provide informed context about what this type of event typically means for the named entities. Never return an empty summary.
 
 COUNTRY & GEOGRAPHY:
 - countryCodes: ISO 3166-1 alpha-2, only countries explicitly referenced or clearly inferable.
@@ -69,8 +69,7 @@ export async function enrichSignalWithGemini(
       contents: [{ role: 'user', parts: [{ text: `${ENRICHMENT_PROMPT}\n\n${userPrompt}` }] }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 1024,
-        responseMimeType: 'application/json',
+        maxOutputTokens: 2048,
       },
     });
 
@@ -82,8 +81,11 @@ export async function enrichSignalWithGemini(
     }
     const parsed = JSON.parse(text) as Record<string, unknown>;
 
-    const summary = typeof parsed.summary === 'string' ? parsed.summary : null;
-    if (!summary) return null;
+    const summary = typeof parsed.summary === 'string' && parsed.summary.length > 10 ? parsed.summary : null;
+    if (!summary) {
+      console.warn('[gemini-enrichment] model returned empty/short summary for:', params.title);
+      return null;
+    }
 
     const countryCodes = Array.isArray(parsed.countryCodes)
       ? (parsed.countryCodes as unknown[])
