@@ -1,3 +1,9 @@
+import type { EntityRef } from '@signal/contracts';
+import {
+  formatEntityContextLine,
+  pickEmailHeadline,
+  pickSecondaryBlurb,
+} from './email-signal-presentation';
 import {
   emailLayout,
   escapeHtml,
@@ -7,13 +13,20 @@ import {
   PRODUCT_URL,
 } from './render-email-html';
 
-export function buildAlertEmailSubject(params: { signalTitle: string }): string {
-  const maxLen = 70;
-  const title =
-    params.signalTitle.length > maxLen
-      ? `${params.signalTitle.slice(0, maxLen - 1)}…`
-      : params.signalTitle;
-  return `Signal — ${title}`;
+export function buildAlertEmailSubject(params: {
+  signalTitle: string;
+  signalType?: string;
+  shortSummary?: string | null;
+}): string {
+  const signalType = params.signalType ?? 'unknown';
+  const headline = pickEmailHeadline({
+    title: params.signalTitle,
+    signalType,
+    shortSummary: params.shortSummary,
+  });
+  const maxLen = 68;
+  const line = headline.length > maxLen ? `${headline.slice(0, maxLen - 1)}…` : headline;
+  return `Signal — ${line}`;
 }
 
 export function buildAlertEmailHtml(params: {
@@ -26,6 +39,7 @@ export function buildAlertEmailHtml(params: {
   sourceUrl?: string | undefined;
   sourceLabel?: string | undefined;
   matchReason?: string | undefined;
+  entityRefs?: readonly EntityRef[];
 }): string {
   const {
     signalId,
@@ -36,7 +50,16 @@ export function buildAlertEmailHtml(params: {
     shortSummary,
     sourceUrl,
     matchReason,
+    entityRefs,
   } = params;
+
+  const headline = pickEmailHeadline({
+    title: signalTitle,
+    signalType,
+    shortSummary: shortSummary ?? null,
+  });
+  const contextLine = formatEntityContextLine(entityRefs);
+  const secondaryBlurb = pickSecondaryBlurb(shortSummary ?? null, headline);
 
   const typeLabel = humanSignalType(signalType);
   const dateStr = humanDate(detectedAtIso);
@@ -46,10 +69,18 @@ export function buildAlertEmailHtml(params: {
   const scoreColor = score >= 70 ? '#b91c1c' : score >= 50 ? '#92400e' : '#475569';
   const scoreBorder = score >= 70 ? '#fecaca' : score >= 50 ? '#fde68a' : '#e2e8f0';
 
-  const summaryBlock = shortSummary?.trim()
+  const contextHtml = contextLine
     ? `<tr>
-<td style="padding:0 32px 24px;">
-<p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">${escapeHtml(shortSummary.trim())}</p>
+<td style="padding:0 32px 12px;">
+<p style="margin:0;font-size:13px;color:#64748b;line-height:1.45;"><span style="color:#94a3b8;font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.4px;">Focus · </span>${escapeHtml(contextLine)}</p>
+</td>
+</tr>`
+    : '';
+
+  const secondaryBlock = secondaryBlurb
+    ? `<tr>
+<td style="padding:0 32px 20px;">
+<p style="margin:0;font-size:15px;color:#374151;line-height:1.6;">${escapeHtml(secondaryBlurb)}</p>
 </td>
 </tr>`
     : '';
@@ -93,20 +124,21 @@ Matched by: <strong style="color:#334155;">${escapeHtml(matchReason.trim())}</st
 </td>
 </tr>
 
-<!-- Type + Title -->
+<!-- Category chip (no duplicate of headline) -->
 <tr>
-<td style="padding:0 32px 6px;">
+<td style="padding:0 32px 8px;">
 <span style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(typeLabel)}</span>
 </td>
 </tr>
 <tr>
-<td style="padding:0 32px 20px;">
-<p style="margin:0;font-size:20px;font-weight:700;color:#0f172a;line-height:1.3;">${escapeHtml(signalTitle)}</p>
+<td style="padding:0 32px 8px;">
+<p style="margin:0;font-size:20px;font-weight:700;color:#0f172a;line-height:1.35;">${escapeHtml(headline)}</p>
 </td>
 </tr>
 
-<!-- Summary -->
-${summaryBlock}
+${contextHtml}
+
+${secondaryBlock}
 
 <!-- Match reason -->
 ${matchReasonBlock}
@@ -134,9 +166,10 @@ ${sourceBlock}
 
 </table>`;
 
-  const preheader = shortSummary
-    ? shortSummary.trim().slice(0, 120)
-    : `New intelligence signal: ${signalTitle}`;
+  const preheaderBase =
+    headline.trim() ||
+    (shortSummary?.trim() ? shortSummary.trim().slice(0, 120) : `New signal: ${signalTitle}`);
+  const preheader = preheaderBase.length > 120 ? `${preheaderBase.slice(0, 119)}…` : preheaderBase;
 
   return emailLayout({ preheader, bodyHtml });
 }
@@ -151,16 +184,29 @@ export function buildAlertEmailPlainText(params: {
   sourceUrl?: string | undefined;
   sourceLabel?: string | undefined;
   matchReason?: string | undefined;
+  entityRefs?: readonly EntityRef[];
 }): string {
+  const headline = pickEmailHeadline({
+    title: params.signalTitle,
+    signalType: params.signalType,
+    shortSummary: params.shortSummary ?? null,
+  });
+  const ctx = formatEntityContextLine(params.entityRefs);
+  const secondary = pickSecondaryBlurb(params.shortSummary ?? null, headline);
+
   const lines = [
-    params.signalTitle,
+    headline,
     `${humanSignalType(params.signalType)} — Importance ${params.score}`,
     `${humanDate(params.detectedAtIso)}`,
     '',
   ];
 
-  if (params.shortSummary?.trim()) {
-    lines.push(params.shortSummary.trim(), '');
+  if (ctx) {
+    lines.push(`Focus: ${ctx}`, '');
+  }
+
+  if (secondary) {
+    lines.push(secondary, '');
   }
 
   if (params.matchReason) {

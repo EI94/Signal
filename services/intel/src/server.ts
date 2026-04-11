@@ -582,7 +582,11 @@ async function start() {
         await import('./lib/render-alert-email');
       const { sendEmailViaResend } = await import('./lib/resend-adapter');
 
-      const subject = buildAlertEmailSubject({ signalTitle: signal.title });
+      const subject = buildAlertEmailSubject({
+        signalTitle: signal.title,
+        signalType: signal.signalType,
+        shortSummary: signal.shortSummary,
+      });
       const html = buildAlertEmailHtml({
         signalId,
         signalTitle: signal.title,
@@ -593,6 +597,7 @@ async function start() {
         sourceUrl: signal.provenance?.sourceUrl,
         sourceLabel: signal.provenance?.sourceLabel,
         matchReason: body.userName ? `Test alert for ${body.userName}` : 'Test alert',
+        entityRefs: signal.entityRefs,
       });
       const text = buildAlertEmailPlainText({
         signalId,
@@ -604,6 +609,7 @@ async function start() {
         sourceUrl: signal.provenance?.sourceUrl,
         sourceLabel: signal.provenance?.sourceLabel,
         matchReason: body.userName ? `Test alert for ${body.userName}` : 'Test alert',
+        entityRefs: signal.entityRefs,
       });
 
       const sent = await sendEmailViaResend(config, { to, subject, html, text }, {});

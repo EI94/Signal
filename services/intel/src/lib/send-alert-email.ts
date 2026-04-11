@@ -101,6 +101,8 @@ export async function sendAlertEmail(
   if (!rule || !signal) {
     const subject = buildAlertEmailSubject({
       signalTitle: signal?.title ?? request.signalId,
+      signalType: signal?.signalType,
+      shortSummary: signal?.shortSummary,
     });
     await deps.writeDelivery({
       db,
@@ -131,7 +133,11 @@ export async function sendAlertEmail(
   }
 
   const detectedAtIso = signal.detectedAt.toISOString();
-  const subject = buildAlertEmailSubject({ signalTitle: signal.title });
+  const subject = buildAlertEmailSubject({
+    signalTitle: signal.title,
+    signalType: signal.signalType,
+    shortSummary: signal.shortSummary,
+  });
   const html = buildAlertEmailHtml({
     signalId: request.signalId,
     signalTitle: signal.title,
@@ -142,6 +148,7 @@ export async function sendAlertEmail(
     sourceUrl: signal.provenance?.sourceUrl,
     sourceLabel: signal.provenance?.sourceLabel,
     matchReason: `Rule: ${rule.name}`,
+    entityRefs: signal.entityRefs,
   });
   const text = buildAlertEmailPlainText({
     signalId: request.signalId,
@@ -153,6 +160,7 @@ export async function sendAlertEmail(
     sourceUrl: signal.provenance?.sourceUrl,
     sourceLabel: signal.provenance?.sourceLabel,
     matchReason: `Rule: ${rule.name}`,
+    entityRefs: signal.entityRefs,
   });
 
   const sent = await deps.sendResend(config, { to: request.to, subject, html, text }, {});

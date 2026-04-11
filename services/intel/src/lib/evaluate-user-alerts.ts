@@ -145,7 +145,11 @@ export async function evaluateUserAlertsForSignal(
     const emailEnabled = prefs.channels?.email !== false && prefs.notifications.emailAlerts;
 
     if (wantsImmediate && emailEnabled && email && config.resendEnabled) {
-      const subject = buildAlertEmailSubject({ signalTitle: signal.title });
+      const subject = buildAlertEmailSubject({
+        signalTitle: signal.title,
+        signalType: signal.signalType,
+        shortSummary: signal.shortSummary,
+      });
       const html = buildAlertEmailHtml({
         signalId,
         signalTitle: signal.title,
@@ -156,6 +160,7 @@ export async function evaluateUserAlertsForSignal(
         sourceUrl: signal.provenance?.sourceUrl,
         sourceLabel: signal.provenance?.sourceLabel,
         matchReason: 'Your alert preferences',
+        entityRefs: signal.entityRefs,
       });
       const text = buildAlertEmailPlainText({
         signalId,
@@ -167,6 +172,7 @@ export async function evaluateUserAlertsForSignal(
         sourceUrl: signal.provenance?.sourceUrl,
         sourceLabel: signal.provenance?.sourceLabel,
         matchReason: 'Your alert preferences',
+        entityRefs: signal.entityRefs,
       });
 
       const sent = await sendEmailViaResend(config, { to: [email], subject, html, text }, {});

@@ -33,7 +33,7 @@ describe('render brief email', () => {
       dateLabel: 'Tuesday 8 April 2026',
       periodStartIso: '2026-04-08T00:00:00.000Z',
       periodEndIso: '2026-04-08T23:59:59.999Z',
-      signals: [makeSignal({ title: '<script>x</script>' })],
+      signals: [makeSignal({ title: '<script>x</script>', shortSummary: null })],
     });
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');

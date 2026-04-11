@@ -1,4 +1,9 @@
 import type { LatestSignalDocument } from '@signal/contracts';
+import {
+  formatEntityContextLine,
+  pickEmailHeadline,
+  pickSecondaryBlurb,
+} from './email-signal-presentation';
 import { emailLayout, escapeHtml, humanSignalType, PRODUCT_URL } from './render-email-html';
 import { filterByEntityType } from './select-brief-signals';
 
@@ -12,6 +17,12 @@ const EMAIL_MAX_PER_SECTION = 6;
 export interface BriefEmailSignal {
   signalId: string;
   title: string;
+  /** Newspaper-style lead (from shortSummary or cleaned title). */
+  headline: string;
+  /** Entity names for the meta line. */
+  contextLine?: string;
+  /** Extra detail when headline is first sentence only, or full summary when headline came from title. */
+  secondaryBlurb?: string;
   signalType: string;
   score: number;
   shortSummary?: string | null;
@@ -20,9 +31,20 @@ export interface BriefEmailSignal {
 }
 
 function signalFromDoc(s: LatestSignalDocument): BriefEmailSignal {
+  const headline = pickEmailHeadline({
+    title: s.title,
+    signalType: s.signalType,
+    shortSummary: s.shortSummary,
+  });
+  const contextLine = formatEntityContextLine(s.entityRefs) ?? undefined;
+  const secondaryBlurb = pickSecondaryBlurb(s.shortSummary, headline) ?? undefined;
+
   return {
     signalId: s.signalId,
     title: s.title,
+    headline,
+    contextLine,
+    secondaryBlurb,
     signalType: s.signalType,
     score: Math.round(s.score),
     shortSummary: s.shortSummary,
@@ -33,8 +55,13 @@ function signalFromDoc(s: LatestSignalDocument): BriefEmailSignal {
 
 function renderSignalRow(s: BriefEmailSignal): string {
   const typeLabel = humanSignalType(s.signalType);
-  const summary = s.shortSummary?.trim()
-    ? `<span style="display:block;margin-top:4px;font-size:14px;color:#4b5563;line-height:1.45;">${escapeHtml(s.shortSummary.trim())}</span>`
+
+  const contextHtml = s.contextLine
+    ? `<span style="display:block;margin-top:6px;font-size:13px;color:#64748b;line-height:1.45;"><span style="color:#94a3b8;font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.4px;">Focus · </span>${escapeHtml(s.contextLine)}</span>`
+    : '';
+
+  const secondaryHtml = s.secondaryBlurb
+    ? `<span style="display:block;margin-top:10px;font-size:14px;color:#4b5563;line-height:1.5;">${escapeHtml(s.secondaryBlurb)}</span>`
     : '';
 
   const sourceLink = s.sourceUrl?.startsWith('http')
@@ -55,9 +82,10 @@ function renderSignalRow(s: BriefEmailSignal): string {
 </td>
 </tr>
 </table>
-<span style="display:block;margin-top:6px;font-size:15px;font-weight:600;color:#111827;line-height:1.35;">${escapeHtml(s.title)}</span>
-${summary}
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+<span style="display:block;margin-top:8px;font-size:16px;font-weight:700;color:#111827;line-height:1.4;">${escapeHtml(s.headline)}</span>
+${contextHtml}
+${secondaryHtml}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:10px;">
 <tr>
 ${sourceLink ? `<td style="padding-right:16px;">${sourceLink}</td>` : ''}
 <td>${signalLink}</td>
@@ -184,9 +212,18 @@ ${sections}
 ${ctaHtml}
 </table>`;
 
+  const first = signals[0];
+  const preheaderLead = first
+    ? pickEmailHeadline({
+        title: first.title,
+        signalType: first.signalType,
+        shortSummary: first.shortSummary,
+      })
+    : 'your daily brief';
+
   const preheader =
     signals.length > 0
-      ? `${signals.length} signals — ${signals[0] ? signals[0].title : 'your daily brief'}`
+      ? `${signals.length} signals — ${preheaderLead.slice(0, 100)}${preheaderLead.length > 100 ? '…' : ''}`
       : 'Your daily intelligence brief';
 
   return emailLayout({ preheader, bodyHtml });
@@ -210,9 +247,18 @@ export function buildBriefEmailPlainText(params: {
   } else {
     lines.push('TOP SIGNALS', '');
     for (const s of signals.slice(0, EMAIL_MAX_PER_SECTION)) {
+      const headline = pickEmailHeadline({
+        title: s.title,
+        signalType: s.signalType,
+        shortSummary: s.shortSummary,
+      });
+      const ctx = formatEntityContextLine(s.entityRefs);
+      const secondary = pickSecondaryBlurb(s.shortSummary, headline);
       const type = humanSignalType(s.signalType);
-      lines.push(`• ${s.title} [${type}, score ${Math.round(s.score)}]`);
-      if (s.shortSummary) lines.push(`  ${s.shortSummary}`);
+      lines.push(`• ${headline}`);
+      lines.push(`  [${type}] · score ${Math.round(s.score)}`);
+      if (ctx) lines.push(`  Focus: ${ctx}`);
+      if (secondary) lines.push(`  ${secondary}`);
       if (s.provenance?.sourceUrl) lines.push(`  Source: ${s.provenance.sourceUrl}`);
       lines.push(`  ${PRODUCT_URL}?signal=${encodeURIComponent(s.signalId)}`);
       lines.push('');
