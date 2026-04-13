@@ -64,6 +64,11 @@ export type ApiRuntimeConfig = ServerRuntimeConfig<'api'> & {
    * Optional shared secret for `x-signal-intel-secret` when calling intel (matches intel `INTEL_INTERNAL_SECRET`).
    */
   readonly toolIntelSecret: string | null;
+  /**
+   * When set, `POST /v1/me/suggest-entity-sources` may call Gemini for institutional URL suggestions.
+   */
+  readonly geminiSuggestApiKey: string | null;
+  readonly geminiSuggestModel: string;
 };
 export type IngestRuntimeConfig = ServerRuntimeConfig<'ingest'> & {
   readonly firebaseProjectId: string;
@@ -193,6 +198,11 @@ export type IntelRuntimeConfig = ServerRuntimeConfig<'intel'> & {
   /** BigQuery table id for `brief_runs` rows (intel). */
   readonly bigQueryBriefRunsTableId: string;
   /**
+   * Per-recipient story fingerprint cooldown for alert emails (same narrative re-ingested under a new `signalId`).
+   * 0 disables. Typical BI tools use 7–14 days.
+   */
+  readonly userAlertStoryCooldownDays: number;
+  /**
    * When true, `POST /internal/send-brief-email` and `POST /internal/send-alert-email` may call Resend.
    * Requires API key and from address at load time.
    */
@@ -212,4 +222,9 @@ export type IntelRuntimeConfig = ServerRuntimeConfig<'intel'> & {
    */
   readonly usageMeteringEnabled: boolean;
   readonly bigQueryUsageEventsTableId: string;
+  /**
+   * When true, user alert geo filtering denies signals with no `sourceLinkedGeoCodes` when the
+   * member chose custom macro regions (strict mode once registry-linked geo is universal).
+   */
+  readonly monitoringGeoDenyWhenNoSourceLinked: boolean;
 };

@@ -1,4 +1,5 @@
 import type { LatestSignalDocument, MorningBriefType } from '@signal/contracts';
+import { computeSignalStoryKey } from '@signal/contracts';
 
 /** Explicit selection rules — no hidden heuristics. Documented in `docs/architecture/morning-brief-v1.md`. */
 export const BRIEF_SELECTION = {
@@ -18,6 +19,25 @@ function roundScore(s: number): number {
   const r = Math.round(Number(s));
   if (Number.isNaN(r)) return 0;
   return Math.min(100, Math.max(0, r));
+}
+
+function storyDedupeKey(s: LatestSignalDocument): string {
+  return s.storyKey ?? computeSignalStoryKey(s);
+}
+
+/**
+ * When the pipeline emits a new `signalId` for the same underlying item, keep the strongest row only.
+ */
+export function dedupeSignalsByStoryKey(signals: LatestSignalDocument[]): LatestSignalDocument[] {
+  const seen = new Set<string>();
+  const out: LatestSignalDocument[] = [];
+  for (const s of signals) {
+    const k = storyDedupeKey(s);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(s);
+  }
+  return out;
 }
 
 /**
@@ -68,7 +88,8 @@ export function selectSignalsForBrief(params: {
   });
 
   const sorted = [...filtered].sort((a, b) => roundScore(b.score) - roundScore(a.score));
-  return sorted.slice(0, rules.maxTotal);
+  const deduped = dedupeSignalsByStoryKey(sorted);
+  return deduped.slice(0, rules.maxTotal);
 }
 
 export function hasEntityType(s: LatestSignalDocument, entityType: string): boolean {

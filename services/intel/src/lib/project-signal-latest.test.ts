@@ -30,4 +30,31 @@ describe('buildLatestSignalDocument', () => {
     expect(doc.score).toBe(81);
     expect(doc.provenance?.contentRef).toBe('a'.repeat(32));
   });
+
+  it('sets marketIndexTagIds from market_index entity refs', () => {
+    const now = new Date('2026-04-01T12:00:00Z');
+    const row: SignalRow = {
+      signal_id: 's'.repeat(32),
+      workspace_id: 'ws1',
+      signal_type: 'project_award',
+      entity_refs_json: [
+        { entityType: 'market_index', entityId: 'SPX', displayName: 'S&P 500' },
+      ],
+      title: 'Index move',
+      short_summary: null,
+      status: 'active',
+      novelty: 'new',
+      occurred_at: now,
+      detected_at: now,
+      latest_composite_score: 50,
+      created_at: now,
+      updated_at: now,
+    };
+    const doc = buildLatestSignalDocument({
+      row,
+      compositeScore: 50,
+      sourceContentId: 'a'.repeat(32),
+    });
+    expect(doc.marketIndexTagIds).toEqual(['spx']);
+  });
 });

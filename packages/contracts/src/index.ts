@@ -11,6 +11,7 @@ export const HealthResponseSchema = z.object({
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 
 export { type WorkspaceRole, WorkspaceRoleSchema } from './workspace-role';
+export { normalizeMarketIndexTagIds } from './market-index-tags';
 
 /** Active workspace summary returned when membership is resolved. */
 export const WorkspaceContextSchema = z.object({
@@ -193,7 +194,28 @@ export {
   SavePreferencesResponseSchema,
   type TestDeliveryCTAResponse,
   TestDeliveryCTAResponseSchema,
+  type GeographicAlertScope,
+  GeographicAlertScopeSchema,
+  type MacroRegionCode,
+  MacroRegionCodeSchema,
 } from './api-preferences';
+export {
+  type CatalogSourceRowV1,
+  CatalogSourceRowV1Schema,
+  type CatalogSourcesV1Response,
+  CatalogSourcesV1ResponseSchema,
+  type CreateSourceDraftRequest,
+  CreateSourceDraftRequestSchema,
+  type CreateSourceDraftResponse,
+  CreateSourceDraftResponseSchema,
+  SOURCE_DRAFTS_SUBCOLLECTION,
+  type SuggestedInstitutionalSource,
+  SuggestedInstitutionalSourceSchema,
+  type SuggestEntitySourcesRequest,
+  SuggestEntitySourcesRequestSchema,
+  type SuggestEntitySourcesResponse,
+  SuggestEntitySourcesResponseSchema,
+} from './api-monitoring-v1';
 export {
   type CountryStatus,
   CountryStatusSchema,
@@ -433,6 +455,7 @@ export {
   SignalStatusSchema,
 } from './signal';
 export { deriveSignalId } from './signal-id';
+export { computeSignalStoryKey } from './signal-story-key';
 export {
   type SourceContentExtractionStatus,
   SourceContentExtractionStatusSchema,

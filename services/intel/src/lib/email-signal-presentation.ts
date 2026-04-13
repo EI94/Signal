@@ -49,7 +49,7 @@ export function stripRedundantTypePrefix(title: string, signalType: string): str
   const sep = t.includes(EM_DASH) ? EM_DASH : EN_DASH;
   const parts = t.split(sep);
   if (parts.length < 2) return t;
-  const first = parts[0].trim();
+  const first = parts[0]?.trim() ?? '';
   const rest = parts.slice(1).join(sep).trim();
   if (!rest) return t;
   if (firstSegmentMatchesSignalType(first, signalType)) {

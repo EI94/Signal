@@ -8,6 +8,12 @@ import type {
 } from '@signal/contracts';
 import { AlertRuleDocumentSchema, LatestSignalDocumentSchema } from '@signal/contracts';
 import type admin from 'firebase-admin';
+import {
+  isStoryWithinRecipientCooldown,
+  normalizeRecipientEmail,
+  recordRecipientStoryCooldown,
+  resolveStoryKey,
+} from './alert-story-cooldown';
 import { coerceFirestoreTimestamps } from './coerce-firestore-dates';
 import { buildEmailDeliveryRecipientAudit } from './email-delivery-recipient-audit';
 import { getFirestoreDb } from './firebase-admin';
@@ -132,6 +138,33 @@ export async function sendAlertEmail(
     };
   }
 
+  const storyKey = resolveStoryKey(signal);
+  const cooldownDays = config.userAlertStoryCooldownDays;
+  let recipients = request.to;
+  if (cooldownDays > 0) {
+    const allowed: string[] = [];
+    for (const addr of request.to) {
+      const blocked = await isStoryWithinRecipientCooldown({
+        db,
+        workspaceId: request.workspaceId,
+        recipientKey: normalizeRecipientEmail(addr),
+        storyKey,
+        cooldownDays,
+        now,
+      });
+      if (!blocked) allowed.push(addr);
+    }
+    recipients = allowed;
+  }
+
+  if (recipients.length === 0) {
+    return {
+      deliveryId,
+      status: 'skipped',
+      skippedReason: 'story_cooldown',
+    };
+  }
+
   const detectedAtIso = signal.detectedAt.toISOString();
   const subject = buildAlertEmailSubject({
     signalTitle: signal.title,
@@ -163,9 +196,23 @@ export async function sendAlertEmail(
     entityRefs: signal.entityRefs,
   });
 
-  const sent = await deps.sendResend(config, { to: request.to, subject, html, text }, {});
+  const auditFiltered = buildEmailDeliveryRecipientAudit(recipients);
+  const sent = await deps.sendResend(config, { to: recipients, subject, html, text }, {});
 
   if (sent.ok) {
+    if (cooldownDays > 0) {
+      const markAt = deps.now();
+      for (const addr of recipients) {
+        await recordRecipientStoryCooldown({
+          db,
+          workspaceId: request.workspaceId,
+          recipientKey: normalizeRecipientEmail(addr),
+          storyKey,
+          signalId: request.signalId,
+          now: markAt,
+        });
+      }
+    }
     await deps.writeDelivery({
       db,
       workspaceId: request.workspaceId,
@@ -175,9 +222,9 @@ export async function sendAlertEmail(
         status: 'sent',
         provider: 'resend',
         subject,
-        recipientCount: audit.recipientCount,
-        recipientDomains: audit.recipientDomains,
-        recipientsMasked: audit.recipientsMasked,
+        recipientCount: auditFiltered.recipientCount,
+        recipientDomains: auditFiltered.recipientDomains,
+        recipientsMasked: auditFiltered.recipientsMasked,
         attemptedAt: now,
         sentAt: deps.now(),
         providerMessageId: sent.providerMessageId,
@@ -204,9 +251,9 @@ export async function sendAlertEmail(
       status: 'failed',
       provider: 'resend',
       subject,
-      recipientCount: audit.recipientCount,
-      recipientDomains: audit.recipientDomains,
-      recipientsMasked: audit.recipientsMasked,
+      recipientCount: auditFiltered.recipientCount,
+      recipientDomains: auditFiltered.recipientDomains,
+      recipientsMasked: auditFiltered.recipientsMasked,
       attemptedAt: now,
       errorMessage: sent.message,
       alertRuleId: request.alertRuleId,

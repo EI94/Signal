@@ -3,6 +3,12 @@ import type { IntelRuntimeConfig } from '@signal/config';
 import type { AlertCondition, AlertingPreferences, LatestSignalDocument } from '@signal/contracts';
 import { LatestSignalDocumentSchema, MemberPreferencesDocumentSchema } from '@signal/contracts';
 import type admin from 'firebase-admin';
+import {
+  isStoryWithinRecipientCooldown,
+  recipientCooldownRoutingKey,
+  recordRecipientStoryCooldown,
+  resolveStoryKey,
+} from './alert-story-cooldown';
 import { coerceFirestoreTimestamps } from './coerce-firestore-dates';
 import { evaluateRuleAgainstSignal } from './evaluate-alert-rule';
 import {
@@ -11,6 +17,7 @@ import {
   buildAlertEmailSubject,
 } from './render-alert-email';
 import { sendEmailViaResend } from './resend-adapter';
+import { signalMatchesUserMonitoringFilters } from './user-monitoring-scope';
 
 const PREFS_FETCH_MAX = 200;
 
@@ -20,6 +27,8 @@ export type UserAlertMatch = {
   notificationCreated: boolean;
   emailSent: boolean;
   emailStatus?: string;
+  /** When the same story was already delivered to this inbox within the story cooldown window. */
+  skippedStoryCooldown?: boolean;
 };
 
 export type EvaluateUserAlertsResult = {
@@ -33,7 +42,11 @@ function prefsToAlertCondition(alerting: AlertingPreferences): AlertCondition | 
     (alerting.watchedEntityRefs && alerting.watchedEntityRefs.length > 0) ||
     (alerting.watchedCountryCodes && alerting.watchedCountryCodes.length > 0) ||
     (alerting.watchedSignalFamilies && alerting.watchedSignalFamilies.length > 0) ||
-    alerting.minImportanceScore !== undefined;
+    alerting.minImportanceScore !== undefined ||
+    (alerting.enabledSourceIds && alerting.enabledSourceIds.length > 0) ||
+    (alerting.geographicScope?.coverage === 'custom' &&
+      (alerting.geographicScope.macroRegions?.length ?? 0) > 0) ||
+    (alerting.watchedIndexIds && alerting.watchedIndexIds.length > 0);
 
   if (!hasWatchCriteria) return null;
 
@@ -110,6 +123,14 @@ export async function evaluateUserAlertsForSignal(
     const result = evaluateRuleAgainstSignal(condition, signal);
     if (!result.matched) continue;
 
+    if (
+      !signalMatchesUserMonitoringFilters(signal, prefs.alerting, {
+        denyWhenNoSourceLinkedGeo: config.monitoringGeoDenyWhenNoSourceLinked,
+      })
+    ) {
+      continue;
+    }
+
     const memberSnap = await db
       .collection('workspaces')
       .doc(workspaceId)
@@ -118,6 +139,30 @@ export async function evaluateUserAlertsForSignal(
       .get();
     const memberData = memberSnap.data();
     const email = (memberData?.email as string | undefined) ?? '';
+
+    const storyKey = resolveStoryKey(signal);
+    const recipientKey = recipientCooldownRoutingKey(email, uid);
+    const cooldownDays = config.userAlertStoryCooldownDays;
+    if (
+      await isStoryWithinRecipientCooldown({
+        db,
+        workspaceId,
+        recipientKey,
+        storyKey,
+        cooldownDays,
+        now: new Date(),
+      })
+    ) {
+      matches.push({
+        uid,
+        email,
+        notificationCreated: false,
+        emailSent: false,
+        emailStatus: 'skipped_story_cooldown',
+        skippedStoryCooldown: true,
+      });
+      continue;
+    }
 
     const now = new Date();
     const notifId = randomUUID();
@@ -178,6 +223,19 @@ export async function evaluateUserAlertsForSignal(
       const sent = await sendEmailViaResend(config, { to: [email], subject, html, text }, {});
       emailSent = sent.ok;
       emailStatus = sent.ok ? 'sent' : (sent.message ?? 'failed');
+    }
+
+    const needEmail = wantsImmediate && emailEnabled && Boolean(email) && config.resendEnabled;
+    const shouldSealCooldown = cooldownDays > 0 && (!needEmail || emailSent);
+    if (shouldSealCooldown) {
+      await recordRecipientStoryCooldown({
+        db,
+        workspaceId,
+        recipientKey,
+        storyKey,
+        signalId,
+        now,
+      });
     }
 
     matches.push({

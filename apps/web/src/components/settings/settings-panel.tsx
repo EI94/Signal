@@ -1,15 +1,19 @@
 'use client';
 
-import type {
-  AlertingPreferences,
-  ChannelPreferences,
-  DigestPreferences,
-  EntityRef,
-  FullPreferencesPayload,
-  NotificationPreferences,
+import {
+  normalizeMarketIndexTagIds,
+  type AlertingPreferences,
+  type CatalogSourceRowV1,
+  type ChannelPreferences,
+  type DigestPreferences,
+  type EntityRef,
+  type FullPreferencesPayload,
+  type MacroRegionCode,
+  type NotificationPreferences,
+  type SuggestedInstitutionalSource,
 } from '@signal/contracts';
 import { Button, Surface } from '@signal/ui';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSignalApiBaseUrl } from '../../lib/api/signal-api';
 import { useAuth } from '../auth/auth-provider';
 import { SignInToPersonalizePrompt } from '../auth/sign-in-to-personalize-prompt';
@@ -20,6 +24,24 @@ const SIGNAL_FAMILIES = [
   { value: 'earnings_reporting_update', label: 'Earnings / Reporting' },
   { value: 'ma_divestment', label: 'M&A / Divestment' },
   { value: 'technology_milestone', label: 'Technology Milestone' },
+];
+
+const MACRO_REGION_OPTIONS: { value: MacroRegionCode; label: string }[] = [
+  { value: 'EUROPE', label: 'Europe' },
+  { value: 'MIDDLE_EAST_AFRICA', label: 'Middle East & Africa' },
+  { value: 'AMERICAS', label: 'Americas' },
+  { value: 'ASIA_PACIFIC', label: 'Asia–Pacific' },
+  { value: 'OCEANIA', label: 'Oceania' },
+];
+
+/** Canonical ids (lowercase) — align extraction `market_index` entity ids with these labels. */
+const SUGGESTED_MARKET_INDICES: { id: string; label: string }[] = [
+  { id: 'spx', label: 'S&P 500' },
+  { id: 'ndx', label: 'Nasdaq-100' },
+  { id: 'dji', label: 'Dow Jones' },
+  { id: 'eurostoxx50', label: 'EURO STOXX 50' },
+  { id: 'ftse100', label: 'FTSE 100' },
+  { id: 'msci_world', label: 'MSCI World' },
 ];
 
 const DEFAULT_DIGEST: DigestPreferences = {
@@ -35,6 +57,9 @@ const DEFAULT_ALERTING: AlertingPreferences = {
   watchedSignalFamilies: [],
   minImportanceScore: 50,
   cadenceMode: 'both',
+  geographicScope: { coverage: 'world', macroRegions: [] },
+  enabledSourceIds: [],
+  watchedIndexIds: [],
 };
 const DEFAULT_PREFS: FullPreferencesPayload = {
   notifications: { emailAlerts: true, emailBriefs: true },
@@ -60,6 +85,14 @@ export function SettingsPanel() {
   const [testingDigest, setTestingDigest] = useState(false);
   const [testDigestMsg, setTestDigestMsg] = useState<string | null>(null);
   const [watchlists, setWatchlists] = useState<WatchlistSummary[]>([]);
+  const [catalogSources, setCatalogSources] = useState<CatalogSourceRowV1[]>([]);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const [suggestQuery, setSuggestQuery] = useState('');
+  const [suggestBusy, setSuggestBusy] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestedInstitutionalSource[] | null>(null);
+  const [suggestErr, setSuggestErr] = useState<string | null>(null);
+  const [draftBusyUrl, setDraftBusyUrl] = useState<string | null>(null);
+  const [draftMsg, setDraftMsg] = useState<string | null>(null);
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
     if (!user) return {};
@@ -94,6 +127,28 @@ export function SettingsPanel() {
     };
   }, [user, apiBase, authHeaders]);
 
+  useEffect(() => {
+    if (!user || !apiBase || !prefs.alerting?.enabled) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const headers = await authHeaders();
+        const res = await fetch(`${apiBase}/v1/catalog/sources`, { headers });
+        if (!res.ok || cancelled) return;
+        const body = (await res.json()) as { sources?: CatalogSourceRowV1[] };
+        if (body.sources) {
+          setCatalogSources(body.sources);
+          setCatalogLoaded(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, apiBase, authHeaders, prefs.alerting?.enabled]);
+
   const update = useCallback(
     <K extends keyof FullPreferencesPayload>(
       section: K,
@@ -121,7 +176,18 @@ export function SettingsPanel() {
         body: JSON.stringify({ preferences: prefs }),
       });
       setSaveMsg(res.ok ? 'Preferences saved.' : 'Failed to save.');
-      if (res.ok) setDirty(false);
+      if (res.ok) {
+        setDirty(false);
+        setPrefs((p) => ({
+          ...p,
+          alerting: p.alerting
+            ? {
+                ...p.alerting,
+                watchedIndexIds: normalizeMarketIndexTagIds(p.alerting.watchedIndexIds ?? []),
+              }
+            : p.alerting,
+        }));
+      }
     } catch {
       setSaveMsg('Network error.');
     } finally {
@@ -185,6 +251,69 @@ export function SettingsPanel() {
     }
   }, [sendVerificationEmail]);
 
+  const handleSuggestSources = useCallback(async () => {
+    if (!user || !apiBase) return;
+    setSuggestBusy(true);
+    setSuggestErr(null);
+    setSuggestions(null);
+    try {
+      const headers = await authHeaders();
+      const res = await fetch(`${apiBase}/v1/me/suggest-entity-sources`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ entityQuery: suggestQuery.trim() }),
+      });
+      const body = (await res.json()) as {
+        error?: { message?: string };
+        suggestions?: SuggestedInstitutionalSource[];
+      };
+      if (!res.ok) {
+        setSuggestErr(body.error?.message ?? 'Suggestions unavailable');
+        return;
+      }
+      setSuggestions(body.suggestions ?? []);
+    } catch {
+      setSuggestErr('Network error.');
+    } finally {
+      setSuggestBusy(false);
+    }
+  }, [user, apiBase, authHeaders, suggestQuery]);
+
+  const handleSaveSourceDraft = useCallback(
+    async (s: SuggestedInstitutionalSource) => {
+      if (!user || !apiBase) return;
+      setDraftMsg(null);
+      setDraftBusyUrl(s.url);
+      try {
+        const headers = await authHeaders();
+        const res = await fetch(`${apiBase}/v1/me/source-drafts`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            proposedName: s.title,
+            proposedUrl: s.url,
+            category: s.kind,
+            rationale: s.credibilityNote,
+            fromGeminiSuggestion: true,
+          }),
+        });
+        const body = (await res.json()) as { draftId?: string; error?: { message?: string } };
+        if (!res.ok) {
+          setDraftMsg(body.error?.message ?? 'Could not save draft');
+          return;
+        }
+        setDraftMsg(
+          body.draftId ? `Draft saved (${body.draftId.slice(0, 8)}…); pending review.` : 'Draft saved.',
+        );
+      } catch {
+        setDraftMsg('Network error.');
+      } finally {
+        setDraftBusyUrl(null);
+      }
+    },
+    [user, apiBase, authHeaders],
+  );
+
   const toggleFamily = useCallback((family: string) => {
     setPrefs((prev) => {
       const current = prev.alerting?.watchedSignalFamilies ?? [];
@@ -232,6 +361,30 @@ export function SettingsPanel() {
     setDirty(true);
     setSaveMsg(null);
   }, []);
+
+  const toggleSuggestedMarketIndex = useCallback((canonicalId: string) => {
+    setPrefs((prev) => {
+      const cur = normalizeMarketIndexTagIds(prev.alerting?.watchedIndexIds ?? []);
+      const set = new Set(cur);
+      if (set.has(canonicalId)) set.delete(canonicalId);
+      else set.add(canonicalId);
+      const next = [...set].sort((a, b) => a.localeCompare(b));
+      return {
+        ...prev,
+        alerting: {
+          ...(prev.alerting ?? DEFAULT_ALERTING),
+          watchedIndexIds: next,
+        },
+      };
+    });
+    setDirty(true);
+    setSaveMsg(null);
+  }, []);
+
+  const canonicalWatchedIndexIds = useMemo(
+    () => normalizeMarketIndexTagIds((prefs.alerting ?? DEFAULT_ALERTING).watchedIndexIds ?? []),
+    [prefs.alerting],
+  );
 
   if (!configured || loading) return null;
 
@@ -530,6 +683,229 @@ export function SettingsPanel() {
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="settings-subsection">
+              <h3 className="settings-subsection__title">Geographic focus</h3>
+              <p className="settings-section__desc">
+                Applies when signals carry country metadata. Worldwide includes all regions.
+              </p>
+              <div className="settings-radio-group">
+                <label className="settings-radio">
+                  <input
+                    type="radio"
+                    name="geoCoverage"
+                    checked={(alerting.geographicScope?.coverage ?? 'world') === 'world'}
+                    onChange={() =>
+                      update('alerting', {
+                        geographicScope: { coverage: 'world', macroRegions: [] },
+                      } as Partial<AlertingPreferences>)
+                    }
+                  />
+                  <span>Worldwide</span>
+                </label>
+                <label className="settings-radio">
+                  <input
+                    type="radio"
+                    name="geoCoverage"
+                    checked={alerting.geographicScope?.coverage === 'custom'}
+                    onChange={() =>
+                      update('alerting', {
+                        geographicScope: {
+                          coverage: 'custom',
+                          macroRegions: alerting.geographicScope?.macroRegions ?? [],
+                        },
+                      } as Partial<AlertingPreferences>)
+                    }
+                  />
+                  <span>Selected regions</span>
+                </label>
+              </div>
+              {alerting.geographicScope?.coverage === 'custom' && (
+                <div className="settings-chip-list">
+                  {MACRO_REGION_OPTIONS.map((r) => {
+                    const selected =
+                      alerting.geographicScope?.macroRegions?.includes(r.value) ?? false;
+                    return (
+                      <button
+                        key={r.value}
+                        type="button"
+                        className={`settings-chip ${selected ? 'settings-chip--active' : ''}`}
+                        onClick={() => {
+                          const cur = alerting.geographicScope?.macroRegions ?? [];
+                          const next = selected
+                            ? cur.filter((x) => x !== r.value)
+                            : [...cur, r.value];
+                          update('alerting', {
+                            geographicScope: { coverage: 'custom', macroRegions: next },
+                          } as Partial<AlertingPreferences>);
+                        }}
+                      >
+                        {r.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="settings-subsection">
+              <h3 className="settings-subsection__title">Sources to monitor</h3>
+              <p className="settings-section__desc">
+                Leave all unchecked to use the full ingested catalog. Tick specific feeds to narrow
+                which origins can trigger your alerts.
+              </p>
+              {catalogLoaded && catalogSources.length > 0 ? (
+                <div className="settings-entity-list">
+                  {catalogSources.slice(0, 100).map((src) => {
+                    const on = (alerting.enabledSourceIds ?? []).includes(src.sourceId);
+                    return (
+                      <label
+                        key={src.sourceId}
+                        className="settings-toggle"
+                        style={{ alignItems: 'flex-start' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={() => {
+                            const cur = new Set(alerting.enabledSourceIds ?? []);
+                            if (on) cur.delete(src.sourceId);
+                            else cur.add(src.sourceId);
+                            update('alerting', {
+                              enabledSourceIds: [...cur],
+                            } as Partial<AlertingPreferences>);
+                          }}
+                        />
+                        <span className="settings-toggle__text">
+                          <strong>{src.name}</strong>
+                          <span className="settings-toggle__hint">
+                            {src.category} · score {src.authorityScore}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="settings-empty-hint">
+                  {prefs.alerting?.enabled
+                    ? 'Loading catalog or no active sources in the registry.'
+                    : ''}
+                </p>
+              )}
+            </div>
+
+            <div className="settings-subsection">
+              <h3 className="settings-subsection__title">Market indices (optional)</h3>
+              <p className="settings-section__desc">
+                The signed-in signals feed and your alerts filter to these index tags. Use presets or
+                type custom ids (they are stored lowercase, matching extraction{' '}
+                <code>market_index</code> entity ids).
+              </p>
+              <p className="settings-field__label" style={{ marginBottom: 8 }}>
+                Quick add
+              </p>
+              <div className="settings-chip-list">
+                {SUGGESTED_MARKET_INDICES.map(({ id, label }) => {
+                  const on = canonicalWatchedIndexIds.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`settings-chip ${on ? 'settings-chip--active' : ''}`}
+                      onClick={() => toggleSuggestedMarketIndex(id)}
+                    >
+                      {label}
+                      <span className="settings-toggle__hint" style={{ marginLeft: 6 }}>
+                        ({id})
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <label className="settings-field">
+                <span className="settings-field__label">Custom ids (comma-separated)</span>
+                <input
+                  type="text"
+                  value={(alerting.watchedIndexIds ?? []).join(', ')}
+                  onChange={(e) => {
+                    const parts = e.target.value
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter(Boolean);
+                    update('alerting', { watchedIndexIds: parts } as Partial<AlertingPreferences>);
+                  }}
+                  onBlur={(e) => {
+                    const parts = e.target.value
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter(Boolean);
+                    const n = normalizeMarketIndexTagIds(parts);
+                    update('alerting', { watchedIndexIds: n } as Partial<AlertingPreferences>);
+                  }}
+                  placeholder="e.g. spx, eurostoxx50"
+                />
+              </label>
+              {canonicalWatchedIndexIds.length > 0 && (
+                <p className="settings-toggle__hint" style={{ marginTop: 8 }}>
+                  Stored tokens:{' '}
+                  <strong>{canonicalWatchedIndexIds.join(', ')}</strong>
+                </p>
+              )}
+            </div>
+
+            <div className="settings-subsection">
+              <h3 className="settings-subsection__title">Institutional sources (AI assist)</h3>
+              <p className="settings-section__desc">
+                Gemini proposes official IR / regulatory / statistics URLs — review before adding to
+                your registry.
+              </p>
+              <div className="settings-inline-fields">
+                <label className="settings-field" style={{ flex: 1 }}>
+                  <span className="settings-field__label">Entity or topic</span>
+                  <input
+                    type="text"
+                    value={suggestQuery}
+                    onChange={(e) => setSuggestQuery(e.target.value)}
+                    placeholder="e.g. Johnson Matthey plc investor relations"
+                  />
+                </label>
+                <Button
+                  type="button"
+                  disabled={suggestBusy || suggestQuery.trim().length < 2}
+                  onClick={() => void handleSuggestSources()}
+                >
+                  {suggestBusy ? 'Thinking…' : 'Suggest sources'}
+                </Button>
+              </div>
+              {suggestErr && <p className="settings-empty-hint">{suggestErr}</p>}
+              {draftMsg && <p className="settings-empty-hint">{draftMsg}</p>}
+              {suggestions && suggestions.length > 0 && (
+                <ul className="settings-entity-list">
+                  {suggestions.map((s) => (
+                    <li key={s.url} className="settings-entity-tag" style={{ display: 'block' }}>
+                      <a href={s.url} target="_blank" rel="noreferrer">
+                        {s.title}
+                      </a>
+                      <div className="settings-toggle__hint">{s.kind}</div>
+                      <p className="settings-section__desc" style={{ marginTop: 4 }}>
+                        {s.credibilityNote}
+                      </p>
+                      <div style={{ marginTop: 8 }}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          disabled={draftBusyUrl === s.url}
+                          onClick={() => void handleSaveSourceDraft(s)}
+                        >
+                          {draftBusyUrl === s.url ? 'Saving…' : 'Save draft for review'}
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </>
         )}

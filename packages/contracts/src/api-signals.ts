@@ -6,6 +6,7 @@ import {
   WorkspaceScopeQueryV1Schema,
 } from './api-serving-shared';
 import { ExtractedEventFamilyMvpSchema } from './extracted-event';
+import { normalizeMarketIndexTagIds } from './market-index-tags';
 
 /**
  * Feed filters + pagination without workspace scope (WS11.1 tool exposure injects workspace server-side).
@@ -27,6 +28,21 @@ export const SignalsFeedFiltersV1Schema = CursorPaginationQueryV1Schema.extend({
   occurredAfter: IsoDateTimeStringSchema.optional(),
   /** Inclusive upper bound on `occurredAt`. */
   occurredBefore: IsoDateTimeStringSchema.optional(),
+  /**
+   * Keep signals whose `marketIndexTagIds` intersect this set (OR semantics). Comma-separated or
+   * repeated query params. Signals with no index tags never match when this filter is set.
+   */
+  marketIndexTags: z.preprocess((val) => {
+    if (val === undefined || val === '') return undefined;
+    const raw = Array.isArray(val)
+      ? val.map(String).map((s) => s.trim()).filter(Boolean)
+      : String(val)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+    const n = normalizeMarketIndexTagIds(raw);
+    return n.length > 0 ? n : undefined;
+  }, z.array(z.string().min(1)).max(32).optional()),
   sort: z.enum(['detected_at_desc', 'occurred_at_desc', 'score_desc']).optional(),
   /** When `false`, omit `facets` in the response. Querystring-safe (avoids `z.coerce.boolean()` on `"false"`). */
   includeFacets: z.preprocess((val) => {

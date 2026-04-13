@@ -77,6 +77,11 @@ export function loadApiRuntimeConfig(env: NodeJS.ProcessEnv = process.env): ApiR
   const toolIntelSecret =
     toolIntelSecretRaw && toolIntelSecretRaw.length > 0 ? toolIntelSecretRaw : null;
 
+  const geminiSuggestKeyRaw = env.SIGNAL_GEMINI_SUGGEST_API_KEY?.trim();
+  const geminiSuggestApiKey =
+    geminiSuggestKeyRaw && geminiSuggestKeyRaw.length > 0 ? geminiSuggestKeyRaw : null;
+  const geminiSuggestModel = env.SIGNAL_GEMINI_SUGGEST_MODEL?.trim() || 'gemini-2.0-flash';
+
   return Object.freeze({
     ...base,
     firebaseProjectId,
@@ -93,6 +98,8 @@ export function loadApiRuntimeConfig(env: NodeJS.ProcessEnv = process.env): ApiR
     internalHealthSecret,
     toolIntelBaseUrl,
     toolIntelSecret,
+    geminiSuggestApiKey,
+    geminiSuggestModel,
   });
 }
 

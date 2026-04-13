@@ -125,6 +125,10 @@ export function mapLatestToSignalSummaryV1(
     shortSummary: cleanSummary(doc.shortSummary),
     status: doc.status,
     novelty: doc.novelty ?? null,
+    ...(doc.storyKey ? { storyKey: doc.storyKey } : {}),
+    ...(doc.marketIndexTagIds && doc.marketIndexTagIds.length > 0
+      ? { marketIndexTagIds: doc.marketIndexTagIds }
+      : {}),
     compositeScore: clampCompositeScore(doc.score),
     occurredAt: doc.occurredAt.toISOString(),
     detectedAt: doc.detectedAt.toISOString(),

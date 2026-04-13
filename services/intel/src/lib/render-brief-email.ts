@@ -65,10 +65,19 @@ function renderSignalRow(s: BriefEmailSignal): string {
     : '';
 
   const sourceLink = s.sourceUrl?.startsWith('http')
-    ? `<a href="${escapeHtml(s.sourceUrl)}" style="color:#6b7280;font-size:12px;text-decoration:underline;">${escapeHtml(s.sourceLabel ?? 'Source')}</a>`
+    ? `<a href="${escapeHtml(s.sourceUrl)}" style="color:#6b7280;font-size:12px;text-decoration:underline;line-height:1.45;">${escapeHtml(s.sourceLabel ?? 'Source')}</a>`
     : '';
 
-  const signalLink = `<a href="${PRODUCT_URL}?signal=${encodeURIComponent(s.signalId)}" style="color:#1a6dd4;font-size:12px;text-decoration:none;font-weight:500;">Read on Signal&nbsp;→</a>`;
+  const signalLink = `<a href="${PRODUCT_URL}?signal=${encodeURIComponent(s.signalId)}" style="color:#1a6dd4;font-size:12px;text-decoration:none;font-weight:500;line-height:1.45;">Read on Signal&nbsp;→</a>`;
+
+  const linksBlock = sourceLink
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;">
+<tr><td style="padding-bottom:8px;">${sourceLink}</td></tr>
+<tr><td>${signalLink}</td></tr>
+</table>`
+    : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;">
+<tr><td>${signalLink}</td></tr>
+</table>`;
 
   return `<tr>
 <td style="padding:16px 0;border-bottom:1px solid #f1f5f9;">
@@ -82,15 +91,10 @@ function renderSignalRow(s: BriefEmailSignal): string {
 </td>
 </tr>
 </table>
-<span style="display:block;margin-top:8px;font-size:16px;font-weight:700;color:#111827;line-height:1.4;">${escapeHtml(s.headline)}</span>
+<span style="display:block;margin-top:8px;font-size:16px;font-weight:700;color:#111827;line-height:1.4;word-wrap:break-word;overflow-wrap:break-word;">${escapeHtml(s.headline)}</span>
 ${contextHtml}
 ${secondaryHtml}
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:10px;">
-<tr>
-${sourceLink ? `<td style="padding-right:16px;">${sourceLink}</td>` : ''}
-<td>${signalLink}</td>
-</tr>
-</table>
+${linksBlock}
 </td>
 </tr>`;
 }
@@ -110,7 +114,7 @@ function renderSection(params: {
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
 <tr>
-<td style="padding:20px 32px 4px;">
+<td class="email-h-pad" style="padding:20px 32px 4px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td style="font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.6px;padding-bottom:8px;border-bottom:2px solid #0f172a;">
@@ -121,7 +125,7 @@ ${icon}&nbsp;&nbsp;${escapeHtml(title)}
 </td>
 </tr>
 <tr>
-<td style="padding:0 32px;">
+<td class="email-h-pad" style="padding:0 32px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 ${rows}
 </table>
@@ -154,7 +158,7 @@ export function buildBriefEmailHtml(params: {
 
   const heroHtml = `
 <tr>
-<td style="padding:28px 32px 20px;">
+<td class="email-h-pad" style="padding:28px 32px 20px;">
 <p style="margin:0;font-size:22px;font-weight:700;color:#0f172a;line-height:1.3;">${escapeHtml(title)}</p>
 <p style="margin:6px 0 0;font-size:13px;color:#64748b;">${escapeHtml(dateLabel)}&nbsp;&nbsp;&middot;&nbsp;&nbsp;${signals.length} signal${signals.length !== 1 ? 's' : ''} detected</p>
 </td>
@@ -164,7 +168,7 @@ export function buildBriefEmailHtml(params: {
   if (executiveSummary?.trim()) {
     execHtml = `
 <tr>
-<td style="padding:0 32px 20px;">
+<td class="email-h-pad" style="padding:0 32px 20px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;border-left:4px solid #0f172a;">
 <tr>
 <td style="padding:16px 20px;">
@@ -179,7 +183,7 @@ export function buildBriefEmailHtml(params: {
 
   const noSignalsHtml =
     signals.length === 0
-      ? `<tr><td style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No signals matched your criteria for this period.</td></tr>`
+      ? `<tr><td class="email-h-pad" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No signals matched your criteria for this period.</td></tr>`
       : '';
 
   const sections = [
@@ -195,8 +199,8 @@ export function buildBriefEmailHtml(params: {
     signals.length > 0
       ? `
 <tr>
-<td style="padding:20px 32px 28px;" align="center">
-<a href="${PRODUCT_URL}" style="display:inline-block;background:#0f172a;color:#ffffff;font-size:14px;font-weight:600;padding:12px 28px;border-radius:6px;text-decoration:none;letter-spacing:0.2px;">Open Signal dashboard</a>
+<td class="email-h-pad" style="padding:20px 32px 28px;" align="center">
+<a href="${PRODUCT_URL}" class="email-cta-btn" style="display:inline-block;background:#0f172a;color:#ffffff;font-size:14px;font-weight:600;padding:12px 28px;border-radius:6px;text-decoration:none;letter-spacing:0.2px;line-height:1.35;">Open Signal dashboard</a>
 </td>
 </tr>`
       : '';

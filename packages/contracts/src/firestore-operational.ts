@@ -92,6 +92,8 @@ export const SavedViewDocumentSchema = z.object({
 export type SavedViewDocument = z.infer<typeof SavedViewDocumentSchema>;
 
 const ProvenanceSummarySchema = z.object({
+  /** Global `sources/{sourceId}` registry id when promoted from SourceContent. */
+  sourceId: z.string().uuid().optional(),
   sourceLabel: z.string().optional(),
   sourceUrl: z.string().optional(),
   contentRef: z.string().optional(),
@@ -115,6 +117,16 @@ export const LatestSignalDocumentSchema = z.object({
   updatedAt: z.date(),
   /** Lowercase word tokens from title + entity names for Firestore array-contains search. */
   searchTokens: z.array(z.string()).optional(),
+  /**
+   * Stable story fingerprint (`computeSignalStoryKey`) for deduplicating alerts/digests when the
+   * pipeline emits a new `signalId` for the same underlying item (new extraction / source).
+   */
+  storyKey: z.string().min(1).optional(),
+  /**
+   * Market / equity index tags (e.g. entity ids from `market_index` refs) for feed filtering
+   * against `AlertingPreferences.watchedIndexIds`.
+   */
+  marketIndexTagIds: z.array(z.string().min(1)).max(32).optional(),
 });
 
 export type LatestSignalDocument = z.infer<typeof LatestSignalDocumentSchema>;

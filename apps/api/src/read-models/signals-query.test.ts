@@ -24,6 +24,21 @@ function doc(id: string, overrides: Partial<LatestSignalDocument> = {}): LatestS
 }
 
 describe('filterSignalsForFeed', () => {
+  it('filters by marketIndexTags (intersection)', () => {
+    const window = [
+      doc('a', { marketIndexTagIds: ['spx', 'ndx'] }),
+      doc('b', { marketIndexTagIds: ['eurostoxx'] }),
+      doc('c', {}),
+    ];
+    const q = {
+      marketIndexTags: ['spx'],
+      limit: 10,
+      sort: 'detected_at_desc' as const,
+    };
+    const f = filterSignalsForFeed(window, q);
+    expect(f.map((d) => d.signalId)).toEqual(['a']);
+  });
+
   it('filters by entity ref', () => {
     const window = [
       doc('a', { entityRefs: [{ entityType: 'x', entityId: '1' }] }),

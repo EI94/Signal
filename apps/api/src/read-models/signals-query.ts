@@ -22,6 +22,13 @@ function entityRefMatches(
   return doc.entityRefs.some((e) => e.entityType === entityType && e.entityId === entityId);
 }
 
+function marketIndexTagsMatch(doc: LatestSignalDocument, wanted: readonly string[]): boolean {
+  const docTags = doc.marketIndexTagIds ?? [];
+  if (docTags.length === 0) return false;
+  const want = new Set(wanted.map((t) => t.toLowerCase()));
+  return docTags.some((t) => want.has(String(t).toLowerCase()));
+}
+
 /**
  * Applies all feed filters supported by the bounded `signalsLatest` window (WS6.3).
  */
@@ -65,6 +72,9 @@ export function filterSignalsForFeed(
     if (query.occurredBefore !== undefined) {
       const t = new Date(query.occurredBefore).getTime();
       if (doc.occurredAt.getTime() > t) return false;
+    }
+    if (query.marketIndexTags !== undefined && query.marketIndexTags.length > 0) {
+      if (!marketIndexTagsMatch(doc, query.marketIndexTags)) return false;
     }
     return true;
   });

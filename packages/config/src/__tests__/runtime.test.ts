@@ -68,6 +68,8 @@ describe('loadApiRuntimeConfig', () => {
     expect(c.internalHealthSecret).toBeNull();
     expect(c.toolIntelBaseUrl).toBeNull();
     expect(c.toolIntelSecret).toBeNull();
+    expect(c.geminiSuggestApiKey).toBeNull();
+    expect(c.geminiSuggestModel).toBe('gemini-2.0-flash');
     expect(Object.isFrozen(c)).toBe(true);
   });
 
@@ -290,6 +292,7 @@ describe('loadIntelRuntimeConfig', () => {
     expect(intel.briefLookbackHours).toBe(48);
     expect(intel.briefEnrichmentEnabled).toBe(false);
     expect(intel.bigQueryBriefRunsTableId).toBe('brief_runs');
+    expect(intel.userAlertStoryCooldownDays).toBe(7);
     expect(intel.resendEnabled).toBe(false);
     expect(intel.resendApiKey).toBeNull();
     expect(intel.resendFromEmail).toBeNull();
@@ -300,6 +303,7 @@ describe('loadIntelRuntimeConfig', () => {
     expect(intel.emailMaxRecipientsPerRequest).toBe(20);
     expect(intel.usageMeteringEnabled).toBe(false);
     expect(intel.bigQueryUsageEventsTableId).toBe('usage_events');
+    expect(intel.monitoringGeoDenyWhenNoSourceLinked).toBe(false);
   });
 
   it('requires SIGNAL_RESEND_API_KEY when SIGNAL_RESEND_ENABLED is true', () => {

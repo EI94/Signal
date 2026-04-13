@@ -16,6 +16,8 @@ export type FeedFilters = {
   minScore?: number;
   novelty?: string;
   search?: string;
+  /** GET `/v1/signals?marketIndexTags=` — intersects with `LatestSignalDocument.marketIndexTagIds`. */
+  marketIndexTags?: string[];
 };
 
 const DEFAULT_LIMIT = 25;
@@ -36,6 +38,9 @@ export function buildSignalsFeedUrl(
   if (filters.minScore !== undefined && filters.minScore > 0)
     params.set('minScore', String(filters.minScore));
   if (filters.novelty) params.set('novelty', filters.novelty);
+  if (filters.marketIndexTags !== undefined && filters.marketIndexTags.length > 0) {
+    params.set('marketIndexTags', filters.marketIndexTags.join(','));
+  }
   if (cursor) params.set('cursor', cursor);
   params.set('limit', String(limit ?? DEFAULT_LIMIT));
   params.set('includeFacets', 'true');

@@ -53,6 +53,7 @@ function cfg(over: Partial<IntelRuntimeConfig> = {}): IntelRuntimeConfig {
     emailMaxRecipientsPerRequest: 20,
     usageMeteringEnabled: false,
     bigQueryUsageEventsTableId: 'usage_events',
+    userAlertStoryCooldownDays: 0,
     ...over,
   };
 }

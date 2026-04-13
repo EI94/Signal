@@ -36,6 +36,10 @@ export const SignalSummaryV1Schema = z.object({
     ])
     .nullable()
     .optional(),
+  /** Same as `LatestSignalDocument.storyKey` — groups near-duplicate pipeline items in the product. */
+  storyKey: z.string().min(1).optional(),
+  /** Subset of index tags carried on `LatestSignalDocument.marketIndexTagIds` when present. */
+  marketIndexTagIds: z.array(z.string().min(1)).max(32).optional(),
 });
 
 export type SignalSummaryV1 = z.infer<typeof SignalSummaryV1Schema>;

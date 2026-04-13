@@ -42,6 +42,7 @@ function intel(over: Partial<IntelRuntimeConfig> = {}): IntelRuntimeConfig {
     briefEnrichmentEnabled: false,
     briefMaxEnrichmentCalls: 1,
     bigQueryBriefRunsTableId: 'brief_runs',
+    userAlertStoryCooldownDays: 7,
     resendEnabled: true,
     resendApiKey: 're_test',
     resendFromEmail: 'from@example.com',

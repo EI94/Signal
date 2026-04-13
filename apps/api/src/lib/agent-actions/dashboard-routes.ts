@@ -20,6 +20,9 @@ export function buildSignalsDashboardRoute(filters: SignalsFeedGetInput): string
   if (f.occurredAfter) p.set('occurredAfter', f.occurredAfter);
   if (f.occurredBefore) p.set('occurredBefore', f.occurredBefore);
   if (f.sort) p.set('sort', f.sort);
+  if (f.marketIndexTags !== undefined && f.marketIndexTags.length > 0) {
+    p.set('marketIndexTags', f.marketIndexTags.join(','));
+  }
   if (f.includeFacets !== undefined) p.set('includeFacets', String(f.includeFacets));
   const qs = p.toString();
   return qs ? `/signals?${qs}` : '/signals';

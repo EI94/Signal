@@ -90,6 +90,30 @@ describe('selectSignalsForBrief', () => {
     expect(out.map((s) => s.signalId)).toEqual(['high', 'low']);
   });
 
+  it('keeps one row per story fingerprint (highest score wins)', () => {
+    const refs = [{ entityType: 'organization', entityId: 'jm', displayName: 'JM' }];
+    const dupA: LatestSignalDocument = {
+      ...sig('sig-old', 70, day, refs),
+      signalType: 'earnings_reporting_update',
+      title: 'Earnings / reporting — JM',
+    };
+    const dupB: LatestSignalDocument = {
+      ...sig('sig-new', 85, day, refs),
+      signalType: 'earnings_reporting_update',
+      title: 'Earnings / reporting — JM',
+    };
+    const out = selectSignalsForBrief({
+      signals: [dupA, dupB],
+      briefType: 'daily_workspace',
+      periodStart,
+      periodEnd,
+      lookbackHours: 48,
+      now: day,
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]?.signalId).toBe('sig-new');
+  });
+
   it('exposes explicit caps in BRIEF_SELECTION', () => {
     expect(BRIEF_SELECTION.daily_workspace.maxTotal).toBeGreaterThan(
       BRIEF_SELECTION.board_digest.maxTotal,

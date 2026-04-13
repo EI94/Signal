@@ -70,6 +70,14 @@ describe('board summary', () => {
 });
 
 describe('signals feed', () => {
+  it('parses marketIndexTags from comma-separated query', () => {
+    const q = SignalsFeedQueryV1Schema.parse({
+      limit: '10',
+      marketIndexTags: 'spx,eurostoxx',
+    });
+    expect(q.marketIndexTags).toEqual(['spx', 'eurostoxx']);
+  });
+
   it('merges feed query fields', () => {
     const q = SignalsFeedQueryV1Schema.parse({
       limit: '10',

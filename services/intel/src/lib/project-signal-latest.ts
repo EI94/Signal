@@ -1,5 +1,23 @@
-import type { EntityRef, LatestSignalDocument, SignalRow } from '@signal/contracts';
+import {
+  computeSignalStoryKey,
+  normalizeMarketIndexTagIds,
+  type EntityRef,
+  type LatestSignalDocument,
+  type SignalRow,
+} from '@signal/contracts';
 import type { Firestore } from 'firebase-admin/firestore';
+
+const INDEX_ENTITY_TYPES = new Set(['market_index', 'equity_index', 'index']);
+
+function inferMarketIndexTagIdsFromEntityRefs(refs: EntityRef[]): string[] {
+  const raw: string[] = [];
+  for (const r of refs) {
+    if (INDEX_ENTITY_TYPES.has(r.entityType.toLowerCase())) {
+      raw.push(r.entityId);
+    }
+  }
+  return normalizeMarketIndexTagIds(raw);
+}
 
 function entityRefsForLatest(refs: EntityRef[] | null): EntityRef[] {
   if (!refs || refs.length === 0) return [];
@@ -39,9 +57,24 @@ export function buildLatestSignalDocument(params: {
   sourceContentId: string;
   sourceUrl?: string;
   sourceLabel?: string;
+  sourceId?: string;
   publishedAt?: Date | null;
 }): LatestSignalDocument {
   const refs = entityRefsForLatest(params.row.entity_refs_json);
+  const provenance = {
+    contentRef: params.sourceContentId,
+    ...(params.sourceId && { sourceId: params.sourceId }),
+    ...(params.sourceUrl && { sourceUrl: params.sourceUrl }),
+    ...(params.sourceLabel && { sourceLabel: params.sourceLabel }),
+    ...(params.publishedAt && { sourcePublishedAt: params.publishedAt }),
+  };
+  const storyKey = computeSignalStoryKey({
+    signalType: params.row.signal_type,
+    title: params.row.title,
+    entityRefs: refs,
+    provenance,
+  });
+  const marketIndexTagIds = inferMarketIndexTagIdsFromEntityRefs(refs);
   return {
     signalId: params.row.signal_id,
     signalType: params.row.signal_type,
@@ -53,14 +86,11 @@ export function buildLatestSignalDocument(params: {
     novelty: params.row.novelty ?? null,
     occurredAt: params.row.occurred_at,
     detectedAt: params.row.detected_at,
-    provenance: {
-      contentRef: params.sourceContentId,
-      ...(params.sourceUrl && { sourceUrl: params.sourceUrl }),
-      ...(params.sourceLabel && { sourceLabel: params.sourceLabel }),
-      ...(params.publishedAt && { sourcePublishedAt: params.publishedAt }),
-    },
+    provenance,
     updatedAt: params.row.updated_at,
     searchTokens: buildSearchTokens(params.row.title, refs, params.sourceLabel),
+    storyKey,
+    ...(marketIndexTagIds.length > 0 ? { marketIndexTagIds } : {}),
   };
 }
 

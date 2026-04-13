@@ -28,6 +28,9 @@ const DEFAULT_PREFS: FullPreferencesPayload = {
     watchedSignalFamilies: [],
     minImportanceScore: 50,
     cadenceMode: 'both',
+    geographicScope: { coverage: 'world', macroRegions: [] },
+    enabledSourceIds: [],
+    watchedIndexIds: [],
   },
 };
 

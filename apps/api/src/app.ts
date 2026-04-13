@@ -9,6 +9,7 @@ import { authV1Routes } from './routes/auth';
 import { healthRoutes } from './routes/health';
 import { healthInternalRoutes } from './routes/health-internal';
 import { marketV1Routes } from './routes/market-v1';
+import { monitoringV1Routes } from './routes/monitoring-v1';
 import { preferencesV1Routes } from './routes/preferences-v1';
 import { pulseV1Routes } from './routes/pulse-v1';
 import { searchV1Routes } from './routes/search-v1';
@@ -61,6 +62,7 @@ export function buildApp(config: ApiRuntimeConfig) {
   app.register(searchV1Routes, { prefix: '/v1', config });
   app.register(marketV1Routes, { prefix: '/v1', config });
   app.register(preferencesV1Routes, { prefix: '/v1', config });
+  app.register(monitoringV1Routes, { prefix: '/v1', config });
   app.register(watchlistsV1Routes, { prefix: '/v1', config });
   app.register(toolExposureV1Routes, {
     prefix: '/v1',

@@ -44,6 +44,9 @@ export function humanTime(isoOrDate: string | Date): string {
 export const PRODUCT_URL =
   process.env.SIGNAL_EMAIL_PRODUCT_URL?.trim() || 'https://www.signalfromtheworld.com';
 
+/** Shared tagline under the Signal wordmark (digest + alerts). */
+export const EMAIL_BRAND_TAGLINE = 'Intelligence from the world for MAIRE';
+
 /** Logo shown in email header (HTTPS, absolute). Prefer PNG/SVG hosted on your domain. */
 function emailBrandLogoUrl(): string {
   const raw = process.env.SIGNAL_EMAIL_LOGO_URL?.trim();
@@ -74,19 +77,33 @@ img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}
 body{margin:0;padding:0;width:100%!important;-webkit-font-smoothing:antialiased}
 a{color:#1a6dd4;text-decoration:none}
 a:hover{text-decoration:underline}
+.email-shell-pad{padding:32px 16px 24px}
+.email-container{max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.email-header-bar{background:#0f172a;padding:22px 32px}
+.email-footer-bar{border-top:1px solid #e5e7eb;padding:24px 32px;background:#fafafa}
+.email-h-pad{box-sizing:border-box}
+@media only screen and (max-width:600px){
+.email-shell-pad{padding:20px 12px!important}
+.email-container{border-radius:8px!important}
+.email-header-bar{padding:18px 20px!important}
+.email-footer-bar{padding:20px 20px!important}
+.email-h-pad{padding-left:16px!important;padding-right:16px!important}
+.email-cta-block{width:100%!important}
+.email-cta-btn{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;text-align:center!important}
+}
 </style>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
-<tr><td align="center" style="padding:32px 16px 24px;">
+<tr><td align="center" class="email-shell-pad" style="padding:32px 16px 24px;">
 
 <!-- Container -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" class="email-container" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
 
 <!-- Header: brand mark + wordmark (reassuring visual identity in all mail clients) -->
 <tr>
-<td style="background:#0f172a;padding:22px 32px;">
+<td class="email-header-bar" style="background:#0f172a;padding:22px 32px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td width="52" valign="middle" style="padding:0 16px 0 0;">
@@ -94,7 +111,7 @@ a:hover{text-decoration:underline}
 </td>
 <td valign="middle">
 <div style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.4px;line-height:1.2;">Signal</div>
-<div style="font-size:12px;color:#94a3b8;letter-spacing:0.25px;margin-top:4px;">Intelligence from the world</div>
+<div style="font-size:12px;color:#94a3b8;letter-spacing:0.25px;margin-top:4px;line-height:1.35;">${escapeHtml(EMAIL_BRAND_TAGLINE)}</div>
 </td>
 </tr>
 </table>
@@ -110,7 +127,7 @@ ${bodyHtml}
 
 <!-- Footer -->
 <tr>
-<td style="border-top:1px solid #e5e7eb;padding:24px 32px;background:#fafafa;">
+<td class="email-footer-bar" style="border-top:1px solid #e5e7eb;padding:24px 32px;background:#fafafa;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td style="font-size:12px;color:#9ca3af;line-height:1.5;">

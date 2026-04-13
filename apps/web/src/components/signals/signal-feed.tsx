@@ -10,6 +10,7 @@ import {
   fetchSignalsFeed,
   SignalsFeedFetchError,
 } from '../../lib/api/fetch-signals-feed';
+import { fetchMemberPreferences } from '../../lib/api/fetch-member-preferences';
 import { getSignalApiBaseUrl } from '../../lib/api/signal-api';
 import { entityPath } from '../../lib/entity-route';
 import {
@@ -36,13 +37,6 @@ export function SignalFeed() {
 
   const filters = useMemo(() => parseSignalsFeedSearchParams(searchParams), [searchParams]);
 
-  const applyFilters = useCallback(
-    (next: FeedFilters) => {
-      router.replace(buildSignalsPagePath(next), { scroll: false });
-    },
-    [router],
-  );
-
   const [items, setItems] = useState<SignalSummaryV1[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [facets, setFacets] = useState<SignalsFeedFacetsV1 | undefined>();
@@ -54,6 +48,45 @@ export function SignalFeed() {
   const [drawerSignal, setDrawerSignal] = useState<SignalSummaryV1 | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'grouped'>('cards');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [indexTagsFromPrefs, setIndexTagsFromPrefs] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    if (!configured || !apiBase || authLoading) return;
+    if (!user) {
+      setIndexTagsFromPrefs(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await user.getIdToken();
+        const prefs = await fetchMemberPreferences(apiBase, token);
+        if (cancelled) return;
+        const ids = prefs?.alerting?.watchedIndexIds?.filter(Boolean) ?? [];
+        setIndexTagsFromPrefs(ids.length > 0 ? ids : null);
+      } catch {
+        if (!cancelled) setIndexTagsFromPrefs(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [configured, apiBase, user, authLoading, refetchNonce]);
+
+  const feedQueryFilters = useMemo(() => {
+    if (indexTagsFromPrefs && indexTagsFromPrefs.length > 0) {
+      return { ...filters, marketIndexTags: indexTagsFromPrefs };
+    }
+    return filters;
+  }, [filters, indexTagsFromPrefs]);
+
+  const applyFilters = useCallback(
+    (next: FeedFilters) => {
+      router.replace(buildSignalsPagePath(next), { scroll: false });
+    },
+    [router],
+  );
 
   useEffect(() => {
     void refetchNonce;
@@ -69,7 +102,7 @@ export function SignalFeed() {
     void (async () => {
       try {
         const token = user ? await user.getIdToken() : null;
-        const data = await fetchSignalsFeed(apiBase, token, filters, null, PAGE_SIZE);
+        const data = await fetchSignalsFeed(apiBase, token, feedQueryFilters, null, PAGE_SIZE);
         if (cancelled) return;
         setItems(data.items);
         setNextPageToken(data.nextPageToken);
@@ -87,7 +120,7 @@ export function SignalFeed() {
     return () => {
       cancelled = true;
     };
-  }, [configured, authLoading, user, apiBase, filters, refetchNonce]);
+  }, [configured, authLoading, user, apiBase, feedQueryFilters, refetchNonce]);
 
   useEffect(() => {
     if (!lastFetchedAt || !apiBase || !configured) return;
@@ -102,7 +135,7 @@ export function SignalFeed() {
     setLoadingMore(true);
     try {
       const token = user ? await user.getIdToken() : null;
-      const data = await fetchSignalsFeed(apiBase, token, filters, nextPageToken, PAGE_SIZE);
+      const data = await fetchSignalsFeed(apiBase, token, feedQueryFilters, nextPageToken, PAGE_SIZE);
       setItems((prev) => [...prev, ...data.items]);
       setNextPageToken(data.nextPageToken);
     } catch (e) {
@@ -111,7 +144,7 @@ export function SignalFeed() {
     } finally {
       setLoadingMore(false);
     }
-  }, [user, apiBase, filters, nextPageToken, loadingMore]);
+  }, [user, apiBase, feedQueryFilters, nextPageToken, loadingMore]);
 
   const retry = useCallback(() => {
     setRefetchNonce((n) => n + 1);
@@ -147,6 +180,11 @@ export function SignalFeed() {
     <div className="feed">
       <div className="feed-toolbar">
         <FilterBar filters={filters} onFiltersChange={applyFilters} facets={facets} />
+        {indexTagsFromPrefs && indexTagsFromPrefs.length > 0 && (
+          <span className="feed-freshness" title="From Settings → Alerting → Market indices">
+            Index filter: {indexTagsFromPrefs.join(', ')}
+          </span>
+        )}
         {lastFetchedAt && (
           <span className="feed-freshness">Updated {formatRelativeTime(lastFetchedAt)}</span>
         )}

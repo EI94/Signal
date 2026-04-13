@@ -157,6 +157,16 @@ export function loadIntelRuntimeConfig(env: NodeJS.ProcessEnv = process.env): In
 
   const bigQueryBriefRunsTableId = env.SIGNAL_BIGQUERY_BRIEF_RUNS_TABLE?.trim() || 'brief_runs';
 
+  const userAlertStoryCooldownDays = (() => {
+    const raw = env.SIGNAL_USER_ALERT_STORY_COOLDOWN_DAYS?.trim();
+    if (raw === undefined || raw === '') return 7;
+    const n = Number.parseInt(raw, 10);
+    if (Number.isNaN(n) || n < 0) {
+      throw new Error(`Invalid SIGNAL_USER_ALERT_STORY_COOLDOWN_DAYS: "${raw}" (use 0–90)`);
+    }
+    return Math.min(90, n);
+  })();
+
   const resendEnabledRaw = env.SIGNAL_RESEND_ENABLED?.trim().toLowerCase();
   const resendEnabled =
     resendEnabledRaw === 'true' || resendEnabledRaw === '1' || resendEnabledRaw === 'yes';
@@ -200,6 +210,10 @@ export function loadIntelRuntimeConfig(env: NodeJS.ProcessEnv = process.env): In
   const bigQueryUsageEventsTableId =
     env.SIGNAL_BIGQUERY_USAGE_EVENTS_TABLE?.trim() || 'usage_events';
 
+  const geoDenyRaw = env.SIGNAL_INTEL_MONITORING_GEO_DENY_WHEN_NO_SOURCE_LINKED?.trim().toLowerCase();
+  const monitoringGeoDenyWhenNoSourceLinked =
+    geoDenyRaw === 'true' || geoDenyRaw === '1' || geoDenyRaw === 'yes';
+
   return Object.freeze({
     ...base,
     firebaseProjectId,
@@ -234,6 +248,7 @@ export function loadIntelRuntimeConfig(env: NodeJS.ProcessEnv = process.env): In
     briefEnrichmentEnabled,
     briefMaxEnrichmentCalls,
     bigQueryBriefRunsTableId,
+    userAlertStoryCooldownDays,
     resendEnabled,
     resendApiKey,
     resendFromEmail,
@@ -243,5 +258,6 @@ export function loadIntelRuntimeConfig(env: NodeJS.ProcessEnv = process.env): In
     emailMaxRecipientsPerRequest,
     usageMeteringEnabled,
     bigQueryUsageEventsTableId,
+    monitoringGeoDenyWhenNoSourceLinked,
   });
 }

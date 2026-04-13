@@ -28,6 +28,7 @@ export type PromoteProcessDeps = {
     bundles: PromotedSignalBundle[];
     sourceUrl?: string;
     sourceLabel?: string;
+    sourceId?: string;
     publishedAt?: Date | null;
   }) => Promise<void>;
   updatePromotionStatus: typeof updateSourceContentPromotionStatus;
@@ -118,11 +119,13 @@ export async function processPromoteSourceContentSignals(
     let resolvedSourceUrl = body.sourceUrl;
     let resolvedSourceLabel = body.sourceLabel;
     let resolvedPublishedAt = body.publishedAt ? new Date(body.publishedAt) : null;
+    let resolvedSourceId: string | undefined;
     let normalizedGcsUri: string | null = null;
 
     try {
       const meta = await deps.resolveSourceMetadata(body.sourceContentId);
       if (meta) {
+        resolvedSourceId = meta.sourceId;
         if (!resolvedSourceUrl && meta.sourceUrl) resolvedSourceUrl = meta.sourceUrl;
         if (!resolvedPublishedAt && meta.publishedAt) resolvedPublishedAt = meta.publishedAt;
         normalizedGcsUri = meta.normalizedGcsUri;
@@ -186,6 +189,7 @@ export async function processPromoteSourceContentSignals(
       bundles,
       sourceUrl: resolvedSourceUrl,
       sourceLabel: resolvedSourceLabel,
+      sourceId: resolvedSourceId,
       publishedAt: resolvedPublishedAt,
     });
 
@@ -261,6 +265,7 @@ export function createDefaultPromoteDeps(config: IntelRuntimeConfig): PromotePro
       bundles,
       sourceUrl,
       sourceLabel,
+      sourceId,
       publishedAt,
     }) => {
       if (bundles.length === 0) return;
@@ -271,6 +276,7 @@ export function createDefaultPromoteDeps(config: IntelRuntimeConfig): PromotePro
           sourceContentId,
           sourceUrl,
           sourceLabel,
+          sourceId,
           publishedAt,
         }),
       );

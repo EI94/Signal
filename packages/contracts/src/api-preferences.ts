@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { EntityRefSchema } from './firestore-operational';
+import { normalizeMarketIndexTagIds } from './market-index-tags';
 
 export const NotificationPreferencesSchema = z.object({
   emailAlerts: z.boolean(),
@@ -29,6 +30,25 @@ export type ChannelPreferences = z.infer<typeof ChannelPreferencesSchema>;
 export const CadenceModeSchema = z.enum(['immediate', 'digest', 'both']);
 export type CadenceMode = z.infer<typeof CadenceModeSchema>;
 
+/** Netflix-style macro areas (multi-select). Mapped to ISO-3166 alpha-2 sets in the alert evaluator. */
+export const MacroRegionCodeSchema = z.enum([
+  'EUROPE',
+  'MIDDLE_EAST_AFRICA',
+  'AMERICAS',
+  'ASIA_PACIFIC',
+  'OCEANIA',
+]);
+
+export type MacroRegionCode = z.infer<typeof MacroRegionCodeSchema>;
+
+export const GeographicAlertScopeSchema = z.object({
+  /** `world` ignores `macroRegions`. */
+  coverage: z.enum(['world', 'custom']),
+  macroRegions: z.array(MacroRegionCodeSchema).max(8).optional(),
+});
+
+export type GeographicAlertScope = z.infer<typeof GeographicAlertScopeSchema>;
+
 export const AlertingPreferencesSchema = z.object({
   enabled: z.boolean(),
   watchedEntityRefs: z.array(EntityRefSchema).optional(),
@@ -36,6 +56,29 @@ export const AlertingPreferencesSchema = z.object({
   watchedSignalFamilies: z.array(z.string().min(1)).optional(),
   minImportanceScore: z.number().int().min(0).max(100).optional(),
   cadenceMode: CadenceModeSchema.optional(),
+  /**
+   * Optional geographic scope for alerts (in addition to legacy `watchedCountryCodes` when set).
+   * When omitted, treated as worldwide for macro-region logic.
+   */
+  geographicScope: GeographicAlertScopeSchema.optional(),
+  /**
+   * Allow-list of global registry source UUIDs. Empty/omitted = all catalog sources the workspace ingests.
+   */
+  enabledSourceIds: z.array(z.string().uuid()).max(500).optional(),
+  /**
+   * Market / equity index ids (same vocabulary as `LatestSignalDocument.marketIndexTagIds`).
+   * When set, the authenticated signals feed can filter to these tags (GET `/v1/signals`).
+   * Normalized on parse: lowercase, trim, dedupe.
+   */
+  watchedIndexIds: z
+    .array(z.string())
+    .max(32)
+    .optional()
+    .transform((arr) => {
+      if (arr === undefined) return undefined;
+      const n = normalizeMarketIndexTagIds(arr);
+      return n.length > 0 ? n : [];
+    }),
 });
 
 export type AlertingPreferences = z.infer<typeof AlertingPreferencesSchema>;
